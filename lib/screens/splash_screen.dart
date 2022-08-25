@@ -25,7 +25,6 @@ class _SplashScreenState extends State<SplashScreen> {
   // 1 - all ok (email not verified) - verify email page
   // 2 - try again
   Future<int> _validEmail() async {
-    print("start");
     try {
       String? token = await getBearerToken();
       var result = await http.get(Uri.parse(api_endpoint+"api/v1/user"), headers: {
@@ -36,6 +35,9 @@ class _SplashScreenState extends State<SplashScreen> {
         var response = jsonDecode(result.body);
         print(response);
         if(response['status']) {
+
+          
+
           if(response['user']['email_verified_at'] == null) {
             return 1;
           } else {

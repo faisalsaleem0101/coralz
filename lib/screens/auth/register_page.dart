@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
+import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/auth/verify_email.dart';
 import 'package:flutter/material.dart';
 import '../theme/header_widget.dart';
@@ -38,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
     });
     
     try {
-      var result = await http.post(Uri.parse(api_endpoint+"api/v1/register"), body: {
+      var result = await http.post(Uri.parse(api_endpoint+"api/v1/reg"), body: {
         "name" : name.text,
         "email" : email.text,
         "password" : password.text,
@@ -48,6 +49,14 @@ class _RegisterPageState extends State<RegisterPage> {
       if(result.statusCode == 200) {
         var response = jsonDecode(result.body);
         if(response['status']) {
+          Map<String,dynamic> userMap = {
+            'id' : response['user']['id'],
+            'name' : response['user']['name'],
+            'email' : response['user']['email'],
+            'avatar' : response['user']['avatar'],
+            'mobile_number' : response['user']['mobile_number'],
+          };
+          await setUserData(userMap);
           await setBearerToken(response['bearer_token']);
           Navigator.push(context, MaterialPageRoute(builder: (builder) => VerifyEmailPage()));
         } else {
@@ -206,6 +215,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       SizedBox(height: 15,),
 
                       TextFormField(
+                        obscureText: true,
                         controller: password,
                         style: TextStyle(
                           fontSize: 18,
@@ -230,6 +240,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       SizedBox(height: 15,),
 
                       TextFormField(
+                        obscureText: true,
                         controller: password_confirmation,
                         style: TextStyle(
                           fontSize: 18,

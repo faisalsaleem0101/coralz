@@ -165,6 +165,7 @@ class _ResetForgetPasswordPageState extends State<ResetForgetPasswordPage> {
                       SizedBox(height: 30,),
 
                       TextFormField(
+                        obscureText: true,
                         controller: password,
                         style: TextStyle(
                           fontSize: 18,
@@ -189,6 +190,7 @@ class _ResetForgetPasswordPageState extends State<ResetForgetPasswordPage> {
                       SizedBox(height: 15,),
 
                       TextFormField(
+                        obscureText: true,
                         controller: password_confirmation,
                         style: TextStyle(
                           fontSize: 18,

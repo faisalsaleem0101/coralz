@@ -5,8 +5,10 @@ import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/auth/login_page.dart';
 import 'package:coralz/screens/home/app_bar.dart';
 import 'package:coralz/screens/home/aquariums_page.dart';
-import 'package:coralz/screens/home/profile/profile_page.dart';
+import 'package:coralz/screens/home/category_page.dart';
+import 'package:coralz/screens/profile/profile_page.dart';
 import 'package:coralz/screens/home/shop_page.dart';
+import 'package:coralz/screens/post/post_view_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:coralz/screens/theme/header_widget.dart';
 import 'package:flutter/material.dart';
@@ -30,30 +32,18 @@ class _HomeState extends State<Home> {
   final double _headerHeight = 220;
   int indexOfPage = 0;
 
-  Future<void> logout(BuildContext context) async {
-    try {
-      String? token = await getBearerToken();
-      await http.post(Uri.parse(api_endpoint+"api/v1/logout"), headers: {
-        "Authorization": "Bearer "+token!
-      });
-      await removeBearerToken();
-    } catch (e) {
-
-    } finally {
-      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => LoginPage(),), (route) => false);
-    }
-  }
+  
 
 
   Widget WidgetPage( ) {
     if(indexOfPage == 0) {
-      return AquariumsPage();
+      return CategoryPage('1', 'Aquariums', key: Key(indexOfPage.toString()));
     } else if(indexOfPage == 1) {
-      return BuyItNowPage();
+      return CategoryPage('2', 'Buy It Now', key: Key(indexOfPage.toString()));
     } else if(indexOfPage == 2) {
-      return AuctionsPage();
+      return CategoryPage('3', 'Auctions', key: Key(indexOfPage.toString()));
     } else if(indexOfPage == 3) {
-      return FishPage();
+      return CategoryPage('4', 'Fish', key: Key(indexOfPage.toString()));
     } else if(indexOfPage == 4) {
       return ShopPage();
     }
@@ -70,6 +60,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    // return PostViewPage();
     return Scaffold(
 
       body: Column(
@@ -83,12 +74,7 @@ class _HomeState extends State<Home> {
       ),
       bottomNavigationBar: ConvexAppBar(
         backgroundColor: primaryColorRGB(1),
-        gradient: LinearGradient(
-          colors: [
-            primaryColorRGB(1),
-            secondaryColorRGB(1),
-          ]
-        ),
+        
         items: [
           TabItem(icon: Icons.home, title: 'Aquariums'),
           TabItem(icon: Icons.shop, title: 'Buy It Now'),

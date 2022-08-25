@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class Category {
   String? id;
@@ -152,38 +153,85 @@ class _AquariumsPageState extends State<BuyItNowPage> {
             ),
             SizedBox(height: 20,),
             Expanded(
-              child: isLoading ? ShimmerLoading() : PageData(data)
-            )
+              child: isLoading
+                  ? ShimmerLoading()
+                  : data.length == 0
+                      ? Center(child: Container(
+                        width: 150,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage("assets/images/nodata-found.png"),
+                            fit: BoxFit.contain
+                          )
+                        ),
+                      ))
+                      : PageData(data))
           ],
         ),
       );
   }
 }
 
-
 Widget PageData(List data) {
-  return 
-    GridView.builder(
-      padding: EdgeInsets.all(15),
-      itemCount: data.length,  
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(  
-          crossAxisCount: 2,  
-          crossAxisSpacing: 15,  
-          mainAxisSpacing: 15  
-      ),  
-      itemBuilder: (BuildContext context, int index) {
-        return Container(
-          padding: EdgeInsets.fromLTRB(10,10,10,30),
-          alignment: Alignment.bottomCenter,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            image: DecorationImage(
-              image: NetworkImage(api_endpoint+data[index]["image"]),
-              fit: BoxFit.cover,
-            )
-          ),
-          child: Text(data[index]["name"],style: TextStyle(fontSize: 22,color: Colors.white,fontWeight: FontWeight.bold),),
-        );
-      },  
-    );
+  return GridView.builder(
+    padding: EdgeInsets.all(15),
+    itemCount: data.length,
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, crossAxisSpacing: 15, mainAxisSpacing: 15),
+    itemBuilder: (BuildContext context, int index) {
+      return CachedNetworkImage(
+          imageUrl: api_endpoint + data[index]["image"],
+          imageBuilder: (context, imageProvider) => Container(
+                padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                alignment: Alignment.bottomCenter,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                    )),
+                child: Text(
+                  data[index]["name"],
+                  style: TextStyle(
+                      fontSize: 22,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+          placeholder: (context, url) => Container(
+                padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                alignment: Alignment.bottomCenter,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(
+                      image: AssetImage("assets/images/image_loader.gif"),
+                      fit: BoxFit.cover,
+                    )),
+                child: Text(
+                  data[index]["name"],
+                  style: TextStyle(
+                      fontSize: 22,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+          errorWidget: (context, url, error) => Container(
+                padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                alignment: Alignment.bottomCenter,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(
+                      image: AssetImage("assets/images/image_not_found.png"),
+                      fit: BoxFit.cover,
+                    )),
+                child: Text(
+                  data[index]["name"],
+                  style: TextStyle(
+                      fontSize: 22,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+              ));
+    },
+  );
 }

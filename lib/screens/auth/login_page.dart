@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
+import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/auth/forget_password.dart';
 import 'package:coralz/screens/auth/register_page.dart';
 import 'package:coralz/screens/auth/verify_email.dart';
@@ -46,6 +47,15 @@ class _LoginPageState extends State<LoginPage> {
         var response = jsonDecode(result.body);
         print(response);
         if(response['status']) {
+          
+          Map<String,dynamic> userMap = {
+            'id' : response['user']['id'],
+            'name' : response['user']['name'],
+            'email' : response['user']['email'],
+            'avatar' : response['user']['avatar'],
+            'mobile_number' : response['user']['mobile_number'],
+          };
+          await setUserData(userMap);
           await setBearerToken(response['bearer_token']);
           if(response['user']['email_verified_at'] == null) {
             Navigator.push(context, MaterialPageRoute(builder: (builder) => VerifyEmailPage()));
@@ -184,6 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(height: 15,),
 
                       TextFormField(
+                        obscureText: true,
                         controller: password,
                         style: TextStyle(
                           fontSize: 18,

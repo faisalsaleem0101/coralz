@@ -1,51 +1,33 @@
 // This widget will draw header section of all page. Wich you will get with the project source code.
 // ignore_for_file: unnecessary_new, sort_child_properties_last, no_logic_in_create_state, library_private_types_in_public_api, prefer_final_fields, unused_field, avoid_unnecessary_containers, prefer_const_literals_to_create_immutables
 
-import 'package:coralz/config/app.dart';
-import 'package:coralz/config/user_data.dart';
-import 'package:coralz/screens/profile/profile_page.dart';
-import 'package:coralz/screens/setting/setting_page.dart';
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'colors.dart';
 
-class AppBarWidget extends StatefulWidget {
+class SimpleHeaderWidget extends StatefulWidget {
   final double _height;
   final bool _showIcon;
   final IconData _icon;
+  final String _header_text;
 
-  const AppBarWidget(this._height, this._showIcon, this._icon, {Key? key})
+  const SimpleHeaderWidget(
+      this._height, this._showIcon, this._icon, this._header_text,
+      {Key? key})
       : super(key: key);
 
   @override
-  _AppBarWidgetState createState() =>
-      _AppBarWidgetState(_height, _showIcon, _icon);
+  _SimpleHeaderWidgetState createState() =>
+      _SimpleHeaderWidgetState(_height, _showIcon, _icon, _header_text);
 }
 
-class _AppBarWidgetState extends State<AppBarWidget> {
+class _SimpleHeaderWidgetState extends State<SimpleHeaderWidget> {
   double _height;
   bool _showIcon;
   IconData _icon;
+  final String _header_text;
 
-  String? avatar;
-
-  _AppBarWidgetState(this._height, this._showIcon, this._icon);
-
-  loadUserData(BuildContext context) async {
-    Map<String, dynamic>? userMap = await getUserData();
-
-    if (mounted && userMap != null) {
-      setState(() {
-        avatar = userMap['avatar'];
-      });
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => loadUserData(context));
-    super.didChangeDependencies();
-  }
+  _SimpleHeaderWidgetState(
+      this._height, this._showIcon, this._icon, this._header_text);
 
   @override
   Widget build(BuildContext context) {
@@ -111,65 +93,41 @@ class _AppBarWidgetState extends State<AppBarWidget> {
           ),
           Container(
             alignment: Alignment.center,
-            padding: EdgeInsets.all(10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (builder) => ProfilePage()));
-                  },
-                  child: avatar != null
-                      ? CachedNetworkImage(
-                          imageUrl: api_endpoint + avatar!,
-                          imageBuilder: (context, imageProvider) =>
-                              CircleAvatar(
-                            radius: 18,
-                            backgroundImage: imageProvider,
-                          ),
-                          placeholder: (context, url) => CircleAvatar(
-                            radius: 18,
-                            backgroundImage:
-                                AssetImage("assets/images/image_loader.gif"),
-                          ),
-                          errorWidget: (context, url, error) => CircleAvatar(
-                            radius: 18,
-                            backgroundImage:
-                                AssetImage("assets/images/image_not_found.png"),
-                          ),
-                        )
-                      : CircleAvatar(
-                          radius: 18,
-                          backgroundImage: AssetImage(
-                              "assets/images/default-profile-picture.jpg"),
-                        ),
-                ),
-                IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.calendar_month,
-                      color: Colors.white,
-                    )),
-                Image.asset('assets/images/logo.png',
-                    width: 150, fit: BoxFit.cover),
-                IconButton(
+                Expanded(
+                    child: Container(
+                  alignment: Alignment.centerLeft,
+                  child: BackButton(
+                    color: Colors.white,
                     onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (builder) => SettingPage()));
+                      Navigator.pop(context);
                     },
-                    icon: Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                    )),
-                IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      Icons.search,
-                      color: Colors.white,
-                    )),
+                  ),
+                )),
+                Expanded(
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: Text(
+                      _header_text,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                    child: Container(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [],
+                  ),
+                ))
               ],
             ),
           )

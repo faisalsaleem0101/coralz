@@ -43,6 +43,8 @@ dependencies:
   circle_nav_bar: ^1.0.2
   convex_bottom_bar: ^3.0.0
   shimmer: ^2.0.0
+  image_picker: ^0.8.5+3
+  cached_network_image: ^3.2.1
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +79,9 @@ flutter:
     - assets/images/default-profile-picture.jpg
     - assets/images/Equipment.jpg
     - assets/images/sample.jpg
+    - assets/images/image_loader.gif
+    - assets/images/image_not_found.png
+    - assets/images/nodata-found.png
     
     
     

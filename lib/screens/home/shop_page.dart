@@ -71,7 +71,7 @@ Widget PageData() {
               fit: BoxFit.cover,
             )
           ),
-          child: Text("Coralz Shop",style: TextStyle(fontSize: 22,color: Colors.white,fontWeight: FontWeight.bold),),
+          child: Text("Coralz Shop",style: TextStyle(fontSize: 20,color: Colors.white,fontWeight: FontWeight.bold),),
         ),
         Container(
           padding: EdgeInsets.fromLTRB(10,10,10,30),
@@ -83,7 +83,7 @@ Widget PageData() {
               fit: BoxFit.cover,
             )
           ),
-          child: Text("Suppliers Map",style: TextStyle(fontSize: 22,color: Colors.white,fontWeight: FontWeight.bold),),
+          child: Text("Suppliers Map",style: TextStyle(fontSize: 20,color: Colors.white,fontWeight: FontWeight.bold),),
         ),
         Container(
           padding: EdgeInsets.fromLTRB(10,10,10,30),
@@ -95,7 +95,7 @@ Widget PageData() {
               fit: BoxFit.cover,
             )
           ),
-          child: Text("Wanted", style: TextStyle(fontSize: 22,color: Colors.white,fontWeight: FontWeight.bold),),
+          child: Text("Wanted", style: TextStyle(fontSize: 20,color: Colors.white,fontWeight: FontWeight.bold),),
         ),
       ],
     );
