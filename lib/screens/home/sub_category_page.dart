@@ -6,6 +6,7 @@ import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/app_bar.dart';
 import 'package:coralz/screens/home/shimmer_loading.dart';
+import 'package:coralz/screens/post/post_create_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
@@ -16,10 +17,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 class SubCategoryPage extends StatefulWidget {
   final String title;
   final String id;
-  const SubCategoryPage(this.id, this.title, {Key? key}) : super(key: key);
+  final String type;
+  const SubCategoryPage(this.id, this.title, this.type,{Key? key}) : super(key: key);
 
   @override
-  State<SubCategoryPage> createState() => _SubCategoryPageState(id, title);
+  State<SubCategoryPage> createState() => _SubCategoryPageState(id, title,type);
 }
 
 class _SubCategoryPageState extends State<SubCategoryPage> {
@@ -29,8 +31,9 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
 
   final String title;
   final String id;
+  final String type;
 
-  _SubCategoryPageState(this.id, this.title);
+  _SubCategoryPageState(this.id, this.title, this.type);
 
   Future<void> _loadData(BuildContext context) async {
     if (mounted) {
@@ -171,7 +174,9 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (){},
+        onPressed: (){
+          Navigator.push(context, MaterialPageRoute(builder: (builder) => PostCreatePage(id,title,type)));
+        },
         backgroundColor: primaryColorRGB(1),
         child: Icon(Icons.add),
       ),

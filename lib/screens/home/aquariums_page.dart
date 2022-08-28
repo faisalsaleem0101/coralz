@@ -200,7 +200,7 @@ Widget PageData(List data) {
       String name = data[index]["name"];
       return GestureDetector(
         onTap: (){
-          Navigator.push(context, MaterialPageRoute(builder: (builder) => SubCategoryPage('1',name)));
+          // Navigator.push(context, MaterialPageRoute(builder: (builder) => SubCategoryPage('1',name)));
         },
         child: CachedNetworkImage(
             imageUrl: api_endpoint + data[index]["image"],

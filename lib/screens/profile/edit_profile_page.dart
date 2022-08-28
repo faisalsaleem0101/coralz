@@ -57,7 +57,8 @@ class _EditPageFormState extends State<EditPageForm> {
   Future<void> pickImage() async {
     final ImagePicker _picker = ImagePicker();
     final XFile? image = (await _picker.pickImage(source: ImageSource.gallery));
-    if (mounted) {
+    
+    if (mounted && image != null) {
       setState(() {
         avatar = image;
       });

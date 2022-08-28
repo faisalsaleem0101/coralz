@@ -8,6 +8,7 @@ void main() {
     debugShowCheckedModeBanner: false,
     home: SplashScreen(),
     theme: ThemeData(
+      primaryColor: primaryColorRGB(1),
       colorScheme: ColorScheme.fromSwatch().copyWith(secondary: primaryColorRGB(1)),
     ),
   ));

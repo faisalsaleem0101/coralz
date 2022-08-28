@@ -3,6 +3,7 @@
 
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/user_data.dart';
+import 'package:coralz/screens/home/show_image_page.dart';
 import 'package:coralz/screens/profile/edit_profile_page.dart';
 import 'package:coralz/screens/profile/profile_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
@@ -206,45 +207,51 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                       ),
                     ),
                     avatar != null
-                        ? CachedNetworkImage(
-                            imageUrl: api_endpoint + avatar!,
-                            imageBuilder: (context, imageProvider) =>
-                                CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white,
-                              child: CircleAvatar(
-                                backgroundImage: imageProvider,
-                                radius: 48,
+                        ? GestureDetector(
+                          onTap: (){
+                            displayDialog(api_endpoint + avatar!, context);
+                          },
+                            child: CachedNetworkImage(
+                              imageUrl: api_endpoint + avatar!,
+                              imageBuilder: (context, imageProvider) =>
+                                  CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                child: CircleAvatar(
+                                  backgroundImage: imageProvider,
+                                  radius: 48,
+                                ),
                               ),
-                            ),
-                            placeholder: (context, url) => CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white,
-                              child: CircleAvatar(
-                                backgroundImage: AssetImage(
-                                    "assets/images/image_loader.gif"),
-                                radius: 48,
+                              placeholder: (context, url) => CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                child: CircleAvatar(
+                                  backgroundImage: AssetImage(
+                                      "assets/images/image_loader.gif"),
+                                  radius: 48,
+                                ),
                               ),
-                            ),
-                            errorWidget: (context, url, error) => CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white,
-                              child: CircleAvatar(
-                                backgroundImage: AssetImage(
-                                    "assets/images/image_not_found.png"),
-                                radius: 48,
+                              errorWidget: (context, url, error) =>
+                                  CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                child: CircleAvatar(
+                                  backgroundImage: AssetImage(
+                                      "assets/images/image_not_found.png"),
+                                  radius: 48,
+                                ),
                               ),
                             ),
                           )
                         : CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white,
-                              child: CircleAvatar(
-                                backgroundImage: AssetImage(
-                                    "assets/images/default-profile-picture.jpg"),
-                                radius: 48,
-                              ),
+                            radius: 50,
+                            backgroundColor: Colors.white,
+                            child: CircleAvatar(
+                              backgroundImage: AssetImage(
+                                  "assets/images/default-profile-picture.jpg"),
+                              radius: 48,
                             ),
+                          ),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(

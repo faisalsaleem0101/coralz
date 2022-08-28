@@ -1,1 +1,2 @@
-String api_endpoint = "http://192.168.1.101:8080/";
+String api_endpoint = "http://10.0.2.2:8000/";
+String chat_endpoint = "http://10.0.2.2:3000/";

@@ -165,9 +165,10 @@ Widget PageData(List data) {
     itemBuilder: (BuildContext context, int index) {
       String name = data[index]["name"];
       String id = data[index]["id"].toString();
+      String type = data[index]["category_type"].toString();
       return GestureDetector(
         onTap: (){
-          Navigator.push(context, MaterialPageRoute(builder: (builder) => SubCategoryPage(id,name)));
+          Navigator.push(context, MaterialPageRoute(builder: (builder) => SubCategoryPage(id,name, type)));
         },
         child: CachedNetworkImage(
             imageUrl: api_endpoint + data[index]["image"],
