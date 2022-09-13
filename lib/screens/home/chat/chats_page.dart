@@ -82,7 +82,7 @@ class _ChatsPageState extends State<ChatsPage> {
                 var date = "";
                 if (k['last_message'] != null) {
                   m = k['last_message']['attachment'] == null
-                      ? k['last_message']['body']
+                      ? k['last_message']['body'].toString()
                       : 'Image';
                   date = formatDate(k['last_message']['created_at']);
                 }

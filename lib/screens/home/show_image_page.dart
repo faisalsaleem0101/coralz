@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:io';
 
-displayDialog(String url, BuildContext context) {
+displayDialog(String url, BuildContext context, File? file) {
   showGeneralDialog(
     context: context,
     barrierDismissible: false,
@@ -33,7 +34,11 @@ displayDialog(String url, BuildContext context) {
               ],
             ),
             Expanded(
-              child: CachedNetworkImage(
+              child: file != null ? Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          image: DecorationImage(
+                              fit: BoxFit.contain, image: Image.file(file).image))) : CachedNetworkImage(
                   imageUrl: url,
                   imageBuilder: (context, imageProvider) => Container(
                       decoration: BoxDecoration(

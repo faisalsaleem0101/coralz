@@ -4,6 +4,7 @@
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/home/chat/chats_page.dart';
+import 'package:coralz/screens/home/search_page.dart';
 import 'package:coralz/screens/home/socket_page.dart';
 import 'package:coralz/screens/profile/profile_page.dart';
 import 'package:coralz/screens/setting/setting_page.dart';
@@ -148,9 +149,14 @@ class _AppBarWidgetState extends State<AppBarWidget> {
                         ),
                 ),
                 IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (builder) => ChatsPage()));
+                    },
                     icon: Icon(
-                      Icons.calendar_month,
+                      Icons.chat,
                       color: Colors.white,
                     )),
                 Image.asset('assets/images/logo.png',
@@ -168,13 +174,10 @@ class _AppBarWidgetState extends State<AppBarWidget> {
                     )),
                 IconButton(
                     onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (builder) => ChatsPage()));
+                      searchDialog(context);
                     },
                     icon: Icon(
-                      Icons.message,
+                      Icons.search,
                       color: Colors.white,
                     )),
               ],

@@ -5,8 +5,10 @@ import 'dart:convert';
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/app_bar.dart';
+import 'package:coralz/screens/home/image_dialog.dart';
 import 'package:coralz/screens/home/shimmer_loading.dart';
 import 'package:coralz/screens/post/post_create_page.dart';
+import 'package:coralz/screens/post/posts_view_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
@@ -18,10 +20,12 @@ class SubCategoryPage extends StatefulWidget {
   final String title;
   final String id;
   final String type;
-  const SubCategoryPage(this.id, this.title, this.type,{Key? key}) : super(key: key);
+  const SubCategoryPage(this.id, this.title, this.type, {Key? key})
+      : super(key: key);
 
   @override
-  State<SubCategoryPage> createState() => _SubCategoryPageState(id, title,type);
+  State<SubCategoryPage> createState() =>
+      _SubCategoryPageState(id, title, type);
 }
 
 class _SubCategoryPageState extends State<SubCategoryPage> {
@@ -123,6 +127,7 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Container(
@@ -145,6 +150,7 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
                   ),
                 )),
                 Expanded(
+                  flex: 3,
                   child: Container(
                       alignment: Alignment.topCenter,
                       child: FittedBox(
@@ -170,101 +176,132 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
           Expanded(
               child: isLoading
                   ? ShimmerLoading()
-                  : PageData(data))
+                  : PageData(data, id: id, title: title))
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          Navigator.push(context, MaterialPageRoute(builder: (builder) => PostCreatePage(id,title,type)));
-        },
-        backgroundColor: primaryColorRGB(1),
-        child: Icon(Icons.add),
-      ),
+      floatingActionButton: type != '5'
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (builder) => PostCreatePage(id, title, type)));
+              },
+              backgroundColor: primaryColorRGB(1),
+              child: Icon(Icons.add),
+            )
+          : Container(),
     );
-
-    
   }
 }
 
-Widget PageData(List data) {
+Widget PageData(List data, {String? id, String? title}) {
   return GridView.builder(
     padding: EdgeInsets.all(15),
-    itemCount: data.length+1,
+    itemCount: data.length + 1,
     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2, crossAxisSpacing: 15, mainAxisSpacing: 15),
     itemBuilder: (BuildContext context, int index) {
-      if(index != data.length) {
-        return CachedNetworkImage(
-          imageUrl: api_endpoint + data[index]["image"],
-          imageBuilder: (context, imageProvider) => Container(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
-                alignment: Alignment.bottomCenter,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    image: DecorationImage(
-                      image: imageProvider,
-                      fit: BoxFit.cover,
-                    )),
-                child: Text(
-                  data[index]["name"],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
-          placeholder: (context, url) => Container(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
-                alignment: Alignment.bottomCenter,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    image: DecorationImage(
-                      image: AssetImage("assets/images/image_loader.gif"),
-                      fit: BoxFit.cover,
-                    )),
-                child: Text(
-                  data[index]["name"],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
-          errorWidget: (context, url, error) => Container(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
-                alignment: Alignment.bottomCenter,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    image: DecorationImage(
-                      image: AssetImage("assets/images/image_not_found.png"),
-                      fit: BoxFit.cover,
-                    )),
-                child: Text(
-                  data[index]["name"],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-              ));
+      if (index != data.length) {
+        return GestureDetector(
+            onTap: () async {
+              if (data[index]["event_image"] != null) {
+                await showDialog(
+                    context: context,
+                    builder: (_) => ImageDialog(
+                        api_endpoint + data[index]["event_image"].toString()));
+              }
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (builder) => PostsViewPage(
+                          data[index]['id'].toString(),
+                          data[index]["name"],
+                          1)));
+            },
+            child: CachedNetworkImage(
+                imageUrl: api_endpoint + data[index]["image"],
+                imageBuilder: (context, imageProvider) => Container(
+                      padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                      alignment: Alignment.bottomCenter,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          image: DecorationImage(
+                            image: imageProvider,
+                            fit: BoxFit.cover,
+                          )),
+                      child: Text(
+                        data[index]["name"],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                placeholder: (context, url) => Container(
+                      padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                      alignment: Alignment.bottomCenter,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          image: DecorationImage(
+                            image: AssetImage("assets/images/image_loader.gif"),
+                            fit: BoxFit.cover,
+                          )),
+                      child: Text(
+                        data[index]["name"],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                errorWidget: (context, url, error) => Container(
+                      padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                      alignment: Alignment.bottomCenter,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          image: DecorationImage(
+                            image:
+                                AssetImage("assets/images/image_not_found.png"),
+                            fit: BoxFit.cover,
+                          )),
+                      child: Text(
+                        data[index]["name"],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    )));
       }
 
-      return Container(
-          padding: EdgeInsets.fromLTRB(10,10,10,30),
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (builder) =>
+                      PostsViewPage(id ?? '1', title ?? 'All', 0)));
+        },
+        child: Container(
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
           alignment: Alignment.bottomCenter,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            image: DecorationImage(
-              image: AssetImage("assets/images/Equipment.jpg"),
-              fit: BoxFit.cover,
-            )
+              borderRadius: BorderRadius.circular(10),
+              image: DecorationImage(
+                image: AssetImage("assets/images/post-default.png"),
+                fit: BoxFit.cover,
+              )),
+          child: Text(
+            "All",
+            style: TextStyle(
+                fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
           ),
-          child: Text("All",style: TextStyle(fontSize: 20,color: Colors.white,fontWeight: FontWeight.bold),),
-        );
-      
+        ),
+      );
     },
   );
 }

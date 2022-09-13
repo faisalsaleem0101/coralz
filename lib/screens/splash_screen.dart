@@ -61,6 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void gotoNextScreen(BuildContext context) async {
     String? token = await getBearerToken();
     if(token == null) {
+      
       Timer( Duration(seconds: 3),
               () => Navigator.of(context).pushReplacement(MaterialPageRoute(
                   builder: (BuildContext context) => LoginPage())));

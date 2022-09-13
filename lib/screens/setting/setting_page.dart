@@ -3,6 +3,9 @@ import 'package:coralz/config/token.dart';
 import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/auth/login_page.dart';
 import 'package:coralz/screens/setting/account_management.dart';
+import 'package:coralz/screens/setting/help.dart';
+import 'package:coralz/screens/setting/privacy_and_policy_page.dart';
+import 'package:coralz/screens/setting/term_and_condition_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:coralz/screens/theme/simple_header_widget.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +89,10 @@ class _SettingPageState extends State<SettingPage> {
                   child: ListTile(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (builder) => TermAndConditionPage()));
+
+                      },
                       title: Text('Terms & Conditions'),
                       trailing: Icon(Icons.navigate_next)),
                 ),
@@ -97,7 +103,9 @@ class _SettingPageState extends State<SettingPage> {
                   child: ListTile(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (builder) => PrivacyAndPolicyPage()));
+                      },
                       title: Text('Privacy Policy'),
                       trailing: Icon(Icons.navigate_next)),
                 ),
@@ -108,7 +116,10 @@ class _SettingPageState extends State<SettingPage> {
                   child: ListTile(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (builder) => HelpPage()));
+
+                      },
                       title: Text('Help'),
                       trailing: Icon(Icons.navigate_next)),
                 ),

@@ -1,8 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
-import 'package:coralz/screens/home/fish_page.dart';
 import 'package:coralz/screens/home/show_image_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:coralz/screens/theme/simple_header_widget.dart';
@@ -12,6 +12,9 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as Img;
+import 'package:http_parser/http_parser.dart';
 
 String formatDate(var dateTime) {
   var dateToCheck = DateTime.parse(dateTime);
@@ -40,19 +43,21 @@ class Message {
   bool sent = true;
   bool fail = false;
   String date;
+  File? file;
   Message(this.type, this.id, this.body, this.attachment, this.sent, this.fail,
-      this.date);
+      this.date,
+      {this.file});
 }
 
 class ChatPage extends StatefulWidget {
-  
   final String user_id;
   final String id;
   final String name;
-  const ChatPage(this.user_id,this.id, this.name, {Key? key}) : super(key: key);
+  const ChatPage(this.user_id, this.id, this.name, {Key? key})
+      : super(key: key);
 
   @override
-  State<ChatPage> createState() => _ChatPageState(this.user_id, id,name);
+  State<ChatPage> createState() => _ChatPageState(this.user_id, id, name);
 }
 
 class _ChatPageState extends State<ChatPage> {
@@ -65,13 +70,14 @@ class _ChatPageState extends State<ChatPage> {
 
   final TextEditingController _message = TextEditingController();
 
-  late final String user_id; 
+  late final String user_id;
   late final String id;
   late final String name;
   String? url;
 
   void makeConnection() {
     try {
+      print(chat_endpoint);
       socket = io(chat_endpoint, <String, dynamic>{
         'transports': ['websocket'],
         'autoConnect': false,
@@ -89,7 +95,9 @@ class _ChatPageState extends State<ChatPage> {
       // socket.on('disconnect', (_) => print('disconnect'));
       // socket.on('fromServer', (_) => print(_));
 
-    } catch (e) {}
+    } catch (e) {
+      print(e);
+    }
   }
 
   _ChatPageState(this.user_id, this.id, this.name) {
@@ -104,7 +112,6 @@ class _ChatPageState extends State<ChatPage> {
       if (_controller.position.atEdge) {
         bool isTop = _controller.position.pixels == 0;
         if (isTop) {
-          print('At the top');
         } else {
           double pos = _controller.position.pixels;
           _loadData(context);
@@ -135,7 +142,7 @@ class _ChatPageState extends State<ChatPage> {
         var response = jsonDecode(result.body);
 
         if (response['status']) {
-          if(firstPage) {
+          if (firstPage) {
             firstPage = false;
           }
           url = response['messages']['next_page_url'];
@@ -153,7 +160,6 @@ class _ChatPageState extends State<ChatPage> {
                     formatDate(k['created_at'])));
               });
             });
-            print(messages);
           }
         } else {
           if (mounted)
@@ -195,7 +201,7 @@ class _ChatPageState extends State<ChatPage> {
         ));
     }
 
-    if (mounted  && firstPage == false) {
+    if (mounted && firstPage == false) {
       setState(() {
         isLoading = false;
       });
@@ -241,9 +247,7 @@ class _ChatPageState extends State<ChatPage> {
     _message.text = '';
     String u_id = DateTime.now().millisecondsSinceEpoch.toString();
 
-
     try {
-
       if (mounted) {
         setState(() {
           messages.insert(
@@ -278,21 +282,114 @@ class _ChatPageState extends State<ChatPage> {
           // set sent true
 
           return; // termintate furthor code
-        } else {
-          print(response);
-        }
+        } else {}
       }
     } catch (e) {
       print(e);
     }
 
-    Message message;
-    for (var i = 0; i < messages.length; i++) {
-      if (messages[i].id == u_id) {
-        message = messages[i];
-        message.fail = true;
-        setState(() {});
-        break;
+    if (mounted) {
+      Message message;
+      for (var i = 0; i < messages.length; i++) {
+        if (messages[i].id == u_id) {
+          message = messages[i];
+          setState(() {
+            message.fail = true;
+          });
+          break;
+        }
+      }
+    }
+
+    // Set sent false
+  }
+
+  Future<void> _sendMediaMessage(BuildContext context) async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = (await _picker.pickImage(source: ImageSource.gallery));
+
+    if (image == null) {
+      return;
+    }
+
+    String u_id = DateTime.now().millisecondsSinceEpoch.toString();
+
+    try {
+      if (mounted) {
+        setState(() {
+          messages.insert(
+              0,
+              Message(1, u_id, '', '', false, false,
+                  formatDate(DateTime.now().toString()),
+                  file: File(image.path)));
+        });
+      }
+
+      String? token = await getBearerToken();
+
+      var request = http.MultipartRequest(
+          "POST", Uri.parse(api_endpoint + "api/v1/message"));
+      request.headers['Authorization'] = "Bearer " + token!;
+
+      // resized Image
+      Img.Image? image_temp =
+          Img.decodeImage(File(image.path).readAsBytesSync());
+      if (image_temp == null) {
+        return;
+      }
+      Img.Image resized_img = Img.copyResize(image_temp, width: 300);
+      // End
+
+      request.files.add(http.MultipartFile.fromBytes(
+          'attachment', Img.encodeJpg(resized_img),
+          filename: 'resized_image.jpg',
+          contentType: MediaType.parse('image/jpeg')));
+
+      request.fields['to_id'] = id;
+
+      var response = await request.send();
+      var responseData = await response.stream.toBytes();
+
+      if (response.statusCode == 200) {
+        var result = String.fromCharCodes(responseData);
+        var response = jsonDecode(result);
+        if (response['status']) {
+          print(response);
+          Message message;
+          for (var i = 0; i < messages.length; i++) {
+            if (messages[i].id == u_id) {
+              message = messages[i];
+
+              setState(() {
+                message.sent = true;
+              });
+              break;
+            }
+          }
+
+          if (socket != null) {
+            socket.emit('msg', jsonEncode(response));
+          }
+
+          // set sent true
+
+          return; // termintate furthor code
+        } else {}
+      }
+    } catch (e) {
+      print(e);
+    }
+
+    if (mounted) {
+      Message message;
+      for (var i = 0; i < messages.length; i++) {
+        if (messages[i].id == u_id) {
+          message = messages[i];
+          setState(() {
+            message.fail = true;
+          });
+          break;
+        }
       }
     }
 
@@ -355,6 +452,7 @@ class _ChatPageState extends State<ChatPage> {
                           )),
                           IconButton(
                               onPressed: () {
+                                print('Test');
                                 _sendTextMessage(context);
                               },
                               icon: Icon(Icons.send)),
@@ -365,7 +463,7 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 IconButton(
                     onPressed: () {
-                      print(DateTime.now().millisecondsSinceEpoch);
+                      _sendMediaMessage(context);
                     },
                     icon: Icon(Icons.add_a_photo)),
               ],
@@ -392,22 +490,25 @@ class MessageTile extends StatelessWidget {
             child: Align(
               alignment: (Alignment.topRight),
               child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                      bottomLeft: Radius.circular(20)),
-                  color: (message.fail ? Colors.red : Colors.blue),
-                ),
-                padding: EdgeInsets.all(message.body.length == 0 ? 8 : 16),
-                child: message.body.length == 0
-                    ? image(api_endpoint + message.attachment, context)
-                    : Text(
-                        message.body == null ? '' : message.body,
-                        textAlign: TextAlign.left,
-                        style: TextStyle(fontSize: 15, color: Colors.white),
-                      ),
-              ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                        bottomLeft: Radius.circular(20)),
+                    color: (message.fail ? Colors.red : Colors.blue),
+                  ),
+                  padding: EdgeInsets.all(message.body.isEmpty ? 8 : 16),
+                  child: message.file == null
+                      ? message.body.isEmpty
+                          ? image(
+                              api_endpoint + message.attachment, context, null)
+                          : Text(
+                              message.body,
+                              textAlign: TextAlign.left,
+                              style: const TextStyle(
+                                  fontSize: 15, color: Colors.white),
+                            )
+                      : image('', context, message.file)),
             ),
           ),
           Container(
@@ -420,13 +521,15 @@ class MessageTile extends StatelessWidget {
                         Icons.done,
                         size: 16,
                       )
-                    : message.fail ?Icon(
-                        Icons.error,
-                        size: 16,
-                      ) : Icon(
-                        Icons.watch_later,
-                        size: 16,
-                      ),
+                    : message.fail
+                        ? Icon(
+                            Icons.error,
+                            size: 16,
+                          )
+                        : Icon(
+                            Icons.watch_later,
+                            size: 16,
+                          ),
                 SizedBox(
                   width: 10,
                 ),
@@ -455,7 +558,7 @@ class MessageTile extends StatelessWidget {
                 ),
                 padding: EdgeInsets.all(message.body.length == 0 ? 8 : 16),
                 child: message.body.length == 0
-                    ? image(api_endpoint + message.attachment, context)
+                    ? image(api_endpoint + message.attachment, context, null)
                     : Text(
                         message.body == null ? '' : message.body,
                         textAlign: TextAlign.left,
@@ -471,7 +574,6 @@ class MessageTile extends StatelessWidget {
               SizedBox(
                 width: 10,
               ),
-              
             ],
           ),
         )
@@ -480,10 +582,24 @@ class MessageTile extends StatelessWidget {
   }
 }
 
-Widget image(String url, BuildContext context) {
+Widget image(String url, BuildContext context, File? file) {
+  if (file != null) {
+    return GestureDetector(
+      onTap: () {
+        displayDialog('', context, file);
+      },
+      child: Container(
+          width: 150,
+          height: 150,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              image: DecorationImage(
+                  fit: BoxFit.cover, image: Image.file(file).image))),
+    );
+  }
   return GestureDetector(
     onTap: () {
-      displayDialog(url, context);
+      displayDialog(url, context, null);
     },
     child: CachedNetworkImage(
         imageUrl: url,
@@ -493,20 +609,20 @@ Widget image(String url, BuildContext context) {
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 image:
-                    DecorationImage(fit: BoxFit.fill, image: imageProvider))),
+                    DecorationImage(fit: BoxFit.cover, image: imageProvider))),
         placeholder: (context, url) => Container(
             width: 150,
             height: 150,
             decoration: BoxDecoration(
                 image: DecorationImage(
-                    fit: BoxFit.fill,
+                    fit: BoxFit.cover,
                     image: AssetImage("assets/images/image_loader.gif")))),
         errorWidget: (context, url, error) => Container(
             width: 150,
             height: 150,
             decoration: BoxDecoration(
                 image: DecorationImage(
-                    fit: BoxFit.fill,
+                    fit: BoxFit.cover,
                     image: AssetImage("assets/images/image_not_found.png"))))),
   );
 }

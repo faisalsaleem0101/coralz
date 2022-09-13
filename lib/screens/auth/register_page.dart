@@ -55,6 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
             'email' : response['user']['email'],
             'avatar' : response['user']['avatar'],
             'mobile_number' : response['user']['mobile_number'],
+            'payment_link' : response['user']['payment_link'],
           };
           await setUserData(userMap);
           await setBearerToken(response['bearer_token']);

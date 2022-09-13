@@ -10,6 +10,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as Img;
+import 'package:http_parser/http_parser.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
@@ -24,6 +26,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Container(
@@ -57,7 +60,7 @@ class _EditPageFormState extends State<EditPageForm> {
   Future<void> pickImage() async {
     final ImagePicker _picker = ImagePicker();
     final XFile? image = (await _picker.pickImage(source: ImageSource.gallery));
-    
+
     if (mounted && image != null) {
       setState(() {
         avatar = image;
@@ -90,17 +93,30 @@ class _EditPageFormState extends State<EditPageForm> {
     try {
       String? token = await getBearerToken();
 
-      var request = http.MultipartRequest("POST",Uri.parse(api_endpoint + "api/v1/user"));
+      var request = http.MultipartRequest(
+          "POST", Uri.parse(api_endpoint + "api/v1/user"));
       request.headers['Authorization'] = "Bearer " + token!;
-      if(avatar != null) {
-        request.files.add(http.MultipartFile.fromBytes('avatar', File(avatar!.path).readAsBytesSync(), filename: avatar!.path));
+      if (avatar != null) {
+        // resized Image
+        Img.Image? image_temp =
+            Img.decodeImage(File(avatar!.path).readAsBytesSync());
+        if (image_temp == null) {
+          return;
+        }
+        Img.Image resized_img = Img.copyResize(image_temp, width: 300);
+        // End
+
+        request.files.add(http.MultipartFile.fromBytes(
+            'avatar', Img.encodeJpg(resized_img),
+            filename: 'resized_image.jpg',
+            contentType: MediaType.parse('image/jpeg')));
       }
       request.fields['name'] = name.text;
       request.fields['mobile_number'] = mobile_number.text;
 
       var response = await request.send();
       var responseData = await response.stream.toBytes();
-      
+
       if (response.statusCode == 200) {
         var result = String.fromCharCodes(responseData);
         var response = jsonDecode(result);
@@ -111,6 +127,7 @@ class _EditPageFormState extends State<EditPageForm> {
             'email': response['user']['email'],
             'avatar': response['user']['avatar'],
             'mobile_number': response['user']['mobile_number'],
+            'payment_link': response['user']['payment_link'],
           };
           await setUserData(userMap);
           if (mounted) {

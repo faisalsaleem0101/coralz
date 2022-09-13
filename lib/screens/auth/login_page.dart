@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
-  String? emailError,passwordError;
+  String? emailError, passwordError;
   bool isLoading = false;
 
   Future<void> _login(BuildContext context) async {
@@ -36,108 +36,109 @@ class _LoginPageState extends State<LoginPage> {
       emailError = null;
       passwordError = null;
     });
-    
+
     try {
-      var result = await http.post(Uri.parse(api_endpoint+"api/v1/login"), body: {
-        "email" : email.text,
-        "password" : password.text,
+      var result =
+          await http.post(Uri.parse(api_endpoint + "api/v1/login"), body: {
+        "email": email.text,
+        "password": password.text,
       });
 
-      if(result.statusCode == 200) {
+      if (result.statusCode == 200) {
         var response = jsonDecode(result.body);
         print(response);
-        if(response['status']) {
-          
-          Map<String,dynamic> userMap = {
-            'id' : response['user']['id'],
-            'name' : response['user']['name'],
-            'email' : response['user']['email'],
-            'avatar' : response['user']['avatar'],
-            'mobile_number' : response['user']['mobile_number'],
+        if (response['status']) {
+          Map<String, dynamic> userMap = {
+            'id': response['user']['id'],
+            'name': response['user']['name'],
+            'email': response['user']['email'],
+            'avatar': response['user']['avatar'],
+            'mobile_number': response['user']['mobile_number'],
+            'payment_link': response['user']['payment_link'],
           };
           await setUserData(userMap);
           await setBearerToken(response['bearer_token']);
-          if(response['user']['email_verified_at'] == null) {
-            Navigator.push(context, MaterialPageRoute(builder: (builder) => VerifyEmailPage()));
+          if (response['user']['email_verified_at'] == null) {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (builder) => VerifyEmailPage()));
           } else {
-            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Home(),), (route) => false);
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Home(),
+                ),
+                (route) => false);
           }
         } else {
-          if(response['errors']['type'] == 1) {
-
+          if (response['errors']['type'] == 1) {
             var errors = response['errors']['errors'];
-            setState(() {  
-              if(errors.containsKey('email')) {
+            setState(() {
+              if (errors.containsKey('email')) {
                 emailError = errors['email'][0];
               }
-              if(errors.containsKey('password')) {
+              if (errors.containsKey('password')) {
                 passwordError = errors['password'][0];
               }
             });
-
-          } else {
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+          } else if (response['errors']['type'] == 2) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 elevation: 0,
                 behavior: SnackBarBehavior.floating,
                 backgroundColor: Colors.transparent,
                 content: AwesomeSnackbarContent(
                   title: 'Error!',
-                  message:
-                      'Something went wrong!',
+                  message: 'Invalid Credentials!',
                   contentType: ContentType.failure,
                 ),
-              )
-            );
-
+              ));
+            }
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              elevation: 0,
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.transparent,
+              content: AwesomeSnackbarContent(
+                title: 'Error!',
+                message: 'Something went wrong!',
+                contentType: ContentType.failure,
+              ),
+            ));
           }
-
         }
-
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            elevation: 0,
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.transparent,
-            content: AwesomeSnackbarContent(
-              title: 'Error!',
-              message:
-                  'Something went wrong!',
-              contentType: ContentType.failure,
-            ),
-          )
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           elevation: 0,
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.transparent,
           content: AwesomeSnackbarContent(
             title: 'Error!',
-            message:
-                e.toString(),
+            message: 'Something went wrong!',
             contentType: ContentType.failure,
           ),
-        )
-      );
+        ));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        content: AwesomeSnackbarContent(
+          title: 'Error!',
+          message: e.toString(),
+          contentType: ContentType.failure,
+        ),
+      ));
     }
-
 
     setState(() {
       isLoading = false;
     });
   }
 
-
-
   @override
   void initState() {
     super.initState();
-    
   }
 
   @override
@@ -157,26 +158,27 @@ class _LoginPageState extends State<LoginPage> {
                   margin: EdgeInsets.fromLTRB(20, 0, 20, 10),
                   child: Column(
                     children: [
-
                       Text(
                         'Login',
                         style: TextStyle(
-                          fontSize: 26,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline
-                        ),
+                            fontSize: 26,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline),
                       ),
-
-                      SizedBox(height: 30,),
-
+                      SizedBox(
+                        height: 30,
+                      ),
                       TextFormField(
                         controller: email,
                         style: TextStyle(
                           fontSize: 18,
                         ),
                         decoration: InputDecoration(
-                          icon: Icon(Icons.email, color:  primaryColorRGB(1),),
+                          icon: Icon(
+                            Icons.email,
+                            color: primaryColorRGB(1),
+                          ),
                           labelText: 'Enter Email',
                           errorText: emailError,
                           labelStyle: TextStyle(
@@ -190,9 +192,9 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-
-                      SizedBox(height: 15,),
-
+                      SizedBox(
+                        height: 15,
+                      ),
                       TextFormField(
                         obscureText: true,
                         controller: password,
@@ -200,13 +202,15 @@ class _LoginPageState extends State<LoginPage> {
                           fontSize: 18,
                         ),
                         decoration: InputDecoration(
-                          icon: Icon(Icons.password ,color:  primaryColorRGB(1),),
+                          icon: Icon(
+                            Icons.password,
+                            color: primaryColorRGB(1),
+                          ),
                           labelText: 'Enter Password',
                           errorText: passwordError,
                           labelStyle: TextStyle(
                             color: Colors.black,
                           ),
-                          
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: primaryColorRGB(1)),
                           ),
@@ -215,49 +219,71 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-
-                      SizedBox(height: 30,),
-
+                      SizedBox(
+                        height: 30,
+                      ),
                       !isLoading
-                      ?
-                        TextButton(
-                          style: ButtonStyle(
-                            splashFactory: NoSplash.splashFactory
-                          ),
-                          onPressed: () {
-                            print("test");
-                            _login(context);
-                          }, 
-                          child: Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              gradient: LinearGradient(
-                                colors: [
-                                  primaryColorRGB(1),
-                                  secondaryColorRGB(0.7),
-                                ]
-                              )
+                          ? TextButton(
+                              style: ButtonStyle(
+                                  splashFactory: NoSplash.splashFactory),
+                              onPressed: () {
+                                print("test");
+                                _login(context);
+                              },
+                              child: Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    gradient: LinearGradient(colors: [
+                                      primaryColorRGB(1),
+                                      secondaryColorRGB(0.7),
+                                    ])),
+                                child: Center(
+                                  child: Text("Login",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                              ))
+                          : CircularProgressIndicator(
+                              color: primaryColorRGB(1),
                             ),
-                            child: Center(
-                              child: Text("Login", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            ),
-                          )
-                        )
-                      : 
-                        CircularProgressIndicator(
-                          color: primaryColorRGB(1),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (builder) => RegisterPage()));
+                        },
+                        child: Text(
+                          "Don't have an account? Sign up",
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: secondaryColorRGB(1)),
                         ),
-
-                      
-
-                      SizedBox(height: 20,),
-                      
-                      TextButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (builder) => RegisterPage()));}, child: Text("Don't have an account? Sign up", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: secondaryColorRGB(1)),),),
-
-                      SizedBox(height: 30,),
-
-                      TextButton(onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (builder) => ForgetPasswordPage()));}, child: Text('Forget Password?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: secondaryColorRGB(1)),),)
+                      ),
+                      SizedBox(
+                        height: 30,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (builder) => ForgetPasswordPage()));
+                        },
+                        child: Text(
+                          'Forget Password?',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: secondaryColorRGB(1)),
+                        ),
+                      )
                     ],
                   )),
             ),

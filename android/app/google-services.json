@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "849533245373",
+    "project_id": "coralz-ce067",
+    "storage_bucket": "coralz-ce067.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:849533245373:android:e5f53a5dbcb58a46fba4d4",
+        "android_client_info": {
+          "package_name": "com.example.coralz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "849533245373-08r6uai23mtk266q5rucrictidcghsca.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCae2K-jS3unXmqQsfvBlqapXEmuqJOXaA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "849533245373-08r6uai23mtk266q5rucrictidcghsca.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

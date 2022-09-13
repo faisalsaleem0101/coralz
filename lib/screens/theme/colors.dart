@@ -10,3 +10,8 @@ Color primaryColorRGB(double intensity) {
 Color secondaryColorRGB(double intensity) {
   return Color.fromRGBO(0, 0, 0, intensity);
 }
+
+Color bottomBarColor() {
+  // return Colors.grey.shade300;
+  return Color.fromRGBO(214, 214, 214, 1);
+}

@@ -97,6 +97,7 @@ class _SimpleHeaderWidgetState extends State<SimpleHeaderWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
+                  flex: 1,
                     child: Container(
                   alignment: Alignment.centerLeft,
                   child: BackButton(
@@ -107,6 +108,7 @@ class _SimpleHeaderWidgetState extends State<SimpleHeaderWidget> {
                   ),
                 )),
                 Expanded(
+                  flex: 3,
                   child: Container(
                     alignment: Alignment.center,
                     child: Text(
@@ -121,6 +123,7 @@ class _SimpleHeaderWidgetState extends State<SimpleHeaderWidget> {
                   ),
                 ),
                 Expanded(
+                  flex: 1,
                     child: Container(
                   alignment: Alignment.centerRight,
                   child: Row(

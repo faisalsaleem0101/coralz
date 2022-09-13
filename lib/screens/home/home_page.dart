@@ -1,24 +1,14 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'package:coralz/config/app.dart';
-import 'package:coralz/config/token.dart';
-import 'package:coralz/screens/auth/login_page.dart';
+import 'package:coralz/config/bottom_bar_icons_icons.dart';
 import 'package:coralz/screens/home/app_bar.dart';
-import 'package:coralz/screens/home/aquariums_page.dart';
 import 'package:coralz/screens/home/category_page.dart';
-import 'package:coralz/screens/profile/profile_page.dart';
 import 'package:coralz/screens/home/shop_page.dart';
-import 'package:coralz/screens/post/post_view_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
-import 'package:coralz/screens/theme/header_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:circle_nav_bar/circle_nav_bar.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
-import './buyitnow_page.dart';
-import './auctions_page.dart';
-import './fish_page.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -28,27 +18,38 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   final double _headerHeight = 220;
-  int indexOfPage = 0;
+  int indexOfPage = 2;
 
-  
-
-
-  Widget WidgetPage( ) {
-    if(indexOfPage == 0) {
+  Widget WidgetPage(int indexOfPage) {
+    if (indexOfPage == 0) {
       return CategoryPage('1', 'Aquariums', key: Key(indexOfPage.toString()));
-    } else if(indexOfPage == 1) {
+    } else if (indexOfPage == 1) {
       return CategoryPage('2', 'Buy It Now', key: Key(indexOfPage.toString()));
-    } else if(indexOfPage == 2) {
+    } else if (indexOfPage == 2) {
       return CategoryPage('3', 'Auctions', key: Key(indexOfPage.toString()));
-    } else if(indexOfPage == 3) {
+    } else if (indexOfPage == 3) {
       return CategoryPage('4', 'Fish', key: Key(indexOfPage.toString()));
-    } else if(indexOfPage == 4) {
+    } else if (indexOfPage == 4) {
       return ShopPage();
     }
 
-    return Container(child: Text('under construction'),);
+    return Container(
+      child: Text('under construction'),
+    );
+  }
+
+  getPermission() async {
+    await [
+      Permission.storage,
+      Permission.camera,
+    ].request();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    getPermission();
   }
 
   // @override
@@ -62,27 +63,50 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     // return PostViewPage();
     return Scaffold(
-
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Container(
             height: _headerHeight,
             child: AppBarWidget(_headerHeight, true, Icons.person),
           ),
-          Expanded(child: WidgetPage())
+          Expanded(child: WidgetPage(indexOfPage))
         ],
       ),
       bottomNavigationBar: ConvexAppBar(
         backgroundColor: primaryColorRGB(1),
-        
+        color: bottomBarColor(),
+
         items: [
-          TabItem(icon: Icons.home, title: 'Aquariums'),
-          TabItem(icon: Icons.shop, title: 'Buy It Now'),
-          TabItem(icon: Icons.add, title: 'Auctions'),
-          TabItem(icon: Icons.message, title: 'Fish'),
-          TabItem(icon: Icons.people, title: 'Shop'),
+          TabItem(
+              icon: Icon(
+                BottomBarIcons.aquariums,
+                color: indexOfPage == 0 ? primaryColorRGB(1) : bottomBarColor(),
+              ),
+              title: 'Aquariums'),
+          TabItem(
+              icon: Icon(BottomBarIcons.buy_it_now,
+                  color:
+                      indexOfPage == 1 ? primaryColorRGB(1) : bottomBarColor()),
+              title: 'Buy It Now'),
+          TabItem(
+              icon: Icon(BottomBarIcons.auction,
+                  color:
+                      indexOfPage == 2 ? primaryColorRGB(1) : bottomBarColor()),
+              title: 'Auctions'),
+          TabItem(
+              icon: Icon(BottomBarIcons.fish,
+                  color:
+                      indexOfPage == 3 ? primaryColorRGB(1) : bottomBarColor()),
+              title: 'Fish'),
+          TabItem(
+            icon: Icon(BottomBarIcons.shop,
+                color:
+                    indexOfPage == 4 ? primaryColorRGB(1) : bottomBarColor()),
+            title: 'Shop',
+          ),
         ],
-        initialActiveIndex: 0,//optional, default as 0
+        initialActiveIndex: 2, //optional, default as 0
         onTap: (int i) {
           setState(() {
             indexOfPage = i;

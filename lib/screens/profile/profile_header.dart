@@ -3,19 +3,27 @@
 
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/user_data.dart';
+import 'package:coralz/screens/home/calendar_page.dart';
 import 'package:coralz/screens/home/show_image_page.dart';
+import 'package:coralz/screens/home/user/user_rating.dart';
 import 'package:coralz/screens/profile/edit_profile_page.dart';
+import 'package:coralz/screens/profile/followers_following_page.dart';
 import 'package:coralz/screens/profile/profile_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ProfilePageHeader extends StatefulWidget {
   final double _height;
   final bool _showIcon;
   final IconData _icon;
 
-  const ProfilePageHeader(this._height, this._showIcon, this._icon, {Key? key})
+  final User user;
+
+  const ProfilePageHeader(this.user, this._height, this._showIcon, this._icon,
+      {Key? key})
       : super(key: key);
 
   @override
@@ -124,14 +132,29 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                 children: [
                   Expanded(
                       child: Container(
-                    alignment: Alignment.centerLeft,
-                    child: BackButton(
-                      color: Colors.white,
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                  )),
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            children: [
+                              BackButton(
+                                color: Colors.white,
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                              IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (builder) =>
+                                                CalendarPage()));
+                                  },
+                                  icon: Icon(
+                                    Icons.calendar_month,
+                                    color: Colors.white,
+                                  ))
+                            ],
+                          ))),
                   Expanded(
                     child: Container(
                       alignment: Alignment.center,
@@ -157,7 +180,10 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                             Icons.share,
                             color: Colors.white,
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            Share.share(
+                                "${api_endpoint}user/${widget.user.id}");
+                          },
                         ),
                         IconButton(
                           icon: Icon(
@@ -183,10 +209,7 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (builder) => ProfilePage()));
+                        showFollowersFollowing(context, '1');
                       },
                       child: Container(
                         width: 90,
@@ -198,7 +221,7 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                             border: Border.all(color: Colors.white)),
                         alignment: Alignment.center,
                         child: Text(
-                          'Followers\n\n0',
+                          'Followers\n\n${widget.user.followers}',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white,
@@ -206,13 +229,14 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                         ),
                       ),
                     ),
-                    avatar != null
+                    widget.user.avatar != null
                         ? GestureDetector(
-                          onTap: (){
-                            displayDialog(api_endpoint + avatar!, context);
-                          },
+                            onTap: () {
+                              displayDialog(api_endpoint + widget.user.avatar!,
+                                  context, null);
+                            },
                             child: CachedNetworkImage(
-                              imageUrl: api_endpoint + avatar!,
+                              imageUrl: api_endpoint + widget.user.avatar!,
                               imageBuilder: (context, imageProvider) =>
                                   CircleAvatar(
                                 radius: 50,
@@ -254,10 +278,8 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                           ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (builder) => ProfilePage()));
+                        showFollowersFollowing(context, '2');
+                        
                       },
                       child: Container(
                         width: 90,
@@ -269,7 +291,7 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                             border: Border.all(color: Colors.white)),
                         alignment: Alignment.center,
                         child: Text(
-                          'Followers\n\n0',
+                          'Following\n\n${widget.user.following}',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white,
@@ -283,7 +305,7 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
               Container(
                 margin: EdgeInsets.only(top: 10),
                 child: Text(
-                  name,
+                  widget.user.name,
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold),
                 ),
@@ -291,7 +313,7 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
               Container(
                 margin: EdgeInsets.only(top: 2),
                 child: Text(
-                  email,
+                  widget.user.email,
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold),
                 ),
@@ -299,50 +321,37 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
               Container(
                 margin: EdgeInsets.only(top: 2),
                 child: Text(
-                  mobile_number,
+                  widget.user.mobileNumber ?? '-',
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
-              Container(
-                margin: EdgeInsets.only(top: 10.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.white,
-                      radius: 21,
-                      child: CircleAvatar(
-                        backgroundColor: primaryColorRGB(1),
-                        radius: 20,
-                        child: IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.phone,
-                              color: Colors.white,
-                            )),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 20,
-                    ),
-                    CircleAvatar(
-                      backgroundColor: Colors.white,
-                      radius: 21,
-                      child: CircleAvatar(
-                        backgroundColor: secondaryColorRGB(1),
-                        radius: 20,
-                        child: IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.message,
-                              color: Colors.white,
-                            )),
-                      ),
-                    ),
-                  ],
-                ),
-              )
+              SizedBox(
+                height: 20,
+              ),
+              GestureDetector(
+                onTap: () {
+                  ratingDialog(widget.user.id, context);
+                },
+                child: Container(
+                    margin: EdgeInsets.only(top: 5, bottom: 5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.user.rating != null
+                              ? widget.user.rating.toString()
+                              : '0',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        )
+                      ],
+                    )),
+              ),
             ],
           )),
         ],
