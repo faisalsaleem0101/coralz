@@ -10,6 +10,7 @@ import 'package:coralz/screens/home/app_bar.dart';
 
 import 'package:coralz/screens/home/shimmer_loading.dart';
 import 'package:coralz/screens/home/swap/swap_create_page.dart';
+import 'package:coralz/screens/home/swap/swap_view_page.dart';
 import 'package:coralz/screens/post/post_create_page.dart';
 import 'package:coralz/screens/post/post_view_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
@@ -259,7 +260,7 @@ class _SwapPostsPageState extends State<SwapPostsPage> {
         return GestureDetector(
             onTap: () async {
               var deleted_post_id = await Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) => PostViewPage(data[index].id)));
+                  builder: (BuildContext context) => SwapPostViewPage(data[index].id)));
                   if(deleted_post_id != null) {
                     data.where((element) => element.id == deleted_post_id.toString(),);
                   }

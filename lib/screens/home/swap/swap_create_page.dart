@@ -5,6 +5,7 @@ import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/app_bar.dart';
 import 'package:coralz/screens/home/shimmer_loading.dart';
+import 'package:coralz/screens/home/swap/swap_view_page.dart';
 import 'package:coralz/screens/post/post_view_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
@@ -216,6 +217,7 @@ class _SwapFormState extends State<SwapForm> {
         var result = String.fromCharCodes(responseData);
         var response = jsonDecode(result);
         if (response['status']) {
+          
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               elevation: 0,
@@ -228,6 +230,9 @@ class _SwapFormState extends State<SwapForm> {
               ),
             ));
           }
+
+          Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) => SwapPostViewPage(response['swap_id'].toString())));
         } else {
           if (response['errors']['type'] == 1) {
             var errors = response['errors']['errors'];

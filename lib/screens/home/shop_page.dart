@@ -6,6 +6,7 @@ import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/shimmer_loading.dart';
 import 'package:coralz/screens/home/shop/coralz_shop_page.dart';
+import 'package:coralz/screens/home/shop/suppliers_map_page.dart';
 import 'package:coralz/screens/home/shop/wanted_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
@@ -79,7 +80,12 @@ Widget PageData(BuildContext context) {
           ),
         ),
       ),
-      Container(
+      GestureDetector(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (builder) => SuppliersMapPage()));
+
+        },
+        child: Container(
         padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
         alignment: Alignment.bottomCenter,
         decoration: BoxDecoration(
@@ -93,6 +99,7 @@ Widget PageData(BuildContext context) {
           style: TextStyle(
               fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
         ),
+      ),
       ),
       GestureDetector(
         onTap: () {
