@@ -5,6 +5,7 @@ import './screens/splash_screen.dart';
 
 void main() {
   runApp(MaterialApp(
+    title: 'Coralz',
     debugShowCheckedModeBanner: false,
     home: SplashScreen(),
     theme: ThemeData(
