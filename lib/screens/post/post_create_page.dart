@@ -377,17 +377,21 @@ class _PostFormState extends State<PostForm> {
       request.headers['Authorization'] = "Bearer " + token!;
 
       images.forEach((element) {
-        Img.Image? image_temp =
-            Img.decodeImage(File(element.image.path).readAsBytesSync());
-        if (image_temp == null) {
-          return;
-        }
-        Img.Image resized_img = Img.copyResize(image_temp, width: 400);
+        // Img.Image? image_temp =
+        //     Img.decodeImage(File(element.image.path).readAsBytesSync());
+        // if (image_temp == null) {
+        //   return;
+        // }
+        // Img.Image resized_img = Img.copyResize(image_temp, width: 400);
+
+        // request.files.add(http.MultipartFile.fromBytes(
+        //     'images[]', Img.encodeJpg(resized_img),
+        //     filename: 'resized_image.jpg',
+        //     contentType: MediaType.parse('image/jpeg')));
 
         request.files.add(http.MultipartFile.fromBytes(
-            'images[]', Img.encodeJpg(resized_img),
-            filename: 'resized_image.jpg',
-            contentType: MediaType.parse('image/jpeg')));
+            'images[]', File(element.image.path).readAsBytesSync(),
+            filename: element.image.path,));
       });
 
       request.fields['title'] = title.text;

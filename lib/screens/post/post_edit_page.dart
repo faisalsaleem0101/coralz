@@ -328,20 +328,26 @@ class _PostFormState extends State<PostForm> {
           "POST", Uri.parse(api_endpoint + "api/v1/post/update/${widget.id}"));
       request.headers['Authorization'] = "Bearer " + token!;
       List<String> post_not_delete_image_ids = [];
-      
+
       images.forEach((element) {
         if (element.postImageId == null) {
-          Img.Image? image_temp =
-              Img.decodeImage(File(element.image!.path).readAsBytesSync());
-          if (image_temp == null) {
-            return;
-          }
-          Img.Image resized_img = Img.copyResize(image_temp, width: 400);
+          // Img.Image? image_temp =
+          //     Img.decodeImage(File(element.image!.path).readAsBytesSync());
+          // if (image_temp == null) {
+          //   return;
+          // }
+          // Img.Image resized_img = Img.copyResize(image_temp, width: 400);
+
+          // request.files.add(http.MultipartFile.fromBytes(
+          //     'images[]', Img.encodeJpg(resized_img),
+          //     filename: 'resized_image.jpg',
+          //     contentType: MediaType.parse('image/jpeg')));
 
           request.files.add(http.MultipartFile.fromBytes(
-              'images[]', Img.encodeJpg(resized_img),
-              filename: 'resized_image.jpg',
-              contentType: MediaType.parse('image/jpeg')));
+            'images[]',
+            File(element.image!.path).readAsBytesSync(),
+            filename: element.image!.path,
+          ));
         } else {
           post_not_delete_image_ids.add(element.postImageId!);
         }
@@ -358,8 +364,8 @@ class _PostFormState extends State<PostForm> {
           delivery_price.text.isNotEmpty ? delivery_price.text : '0';
       request.fields['delivery'] = delivery.toString();
       request.fields['collection'] = collection.toString();
-      request.fields['post_not_delete_image_ids'] = post_not_delete_image_ids.join(",");
-      
+      request.fields['post_not_delete_image_ids'] =
+          post_not_delete_image_ids.join(",");
 
       var response = await request.send();
       var responseData = await response.stream.toBytes();

@@ -306,7 +306,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _sendMediaMessage(BuildContext context) async {
     final ImagePicker _picker = ImagePicker();
-    final XFile? image = (await _picker.pickImage(source: ImageSource.gallery));
+    final XFile? image = (await _picker.pickImage(source: ImageSource.gallery,maxHeight: 400));
 
     if (image == null) {
       return;
@@ -331,19 +331,22 @@ class _ChatPageState extends State<ChatPage> {
           "POST", Uri.parse(api_endpoint + "api/v1/message"));
       request.headers['Authorization'] = "Bearer " + token!;
 
-      // resized Image
-      Img.Image? image_temp =
-          Img.decodeImage(File(image.path).readAsBytesSync());
-      if (image_temp == null) {
-        return;
-      }
-      Img.Image resized_img = Img.copyResize(image_temp, width: 300);
-      // End
+      // // resized Image
+      // Img.Image? image_temp =
+      //     Img.decodeImage(File(image.path).readAsBytesSync());
+      // if (image_temp == null) {
+      //   return;
+      // }
+      // Img.Image resized_img = Img.copyResize(image_temp, width: 300);
+      // // End
 
+      // request.files.add(http.MultipartFile.fromBytes(
+      //     'attachment', Img.encodeJpg(resized_img),
+      //     filename: 'resized_image.jpg',
+      //     contentType: MediaType.parse('image/jpeg')));
       request.files.add(http.MultipartFile.fromBytes(
-          'attachment', Img.encodeJpg(resized_img),
-          filename: 'resized_image.jpg',
-          contentType: MediaType.parse('image/jpeg')));
+          'attachment', File(image.path).readAsBytesSync(),
+          filename: image.path));
 
       request.fields['to_id'] = id;
 

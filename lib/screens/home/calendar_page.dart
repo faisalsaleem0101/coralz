@@ -26,7 +26,6 @@ class _CalendarPageState extends State<CalendarPage> {
     // '2022-9-10' : ["e", "b"]
   };
 
-
   _getEventsForDay(DateTime day) {
     return events["${day.year}-${day.month}-${day.day}"] ?? [];
   }
@@ -42,22 +41,24 @@ class _CalendarPageState extends State<CalendarPage> {
       var result = await http.get(Uri.parse(api_endpoint + "api/v1/events"));
       if (result.statusCode == 200) {
         var response = jsonDecode(result.body);
-        
+
         if (response['status']) {
           if (mounted) {
-            for (MapEntry e in response['data'].entries) {
-                  List<String> v = [];
-                  e.value.forEach((k){
-                    v.add(k['details'].toString());
-                  });
-                  DateTime t = DateTime.parse(e.key);
-                  
-                  events["${t.year}-${t.month}-${t.day}"] = v;
-                }
-                date_events = events["${_selectedDay.year}-${_selectedDay.month}-${_selectedDay.day}"] ?? [];
-            setState(() {
-              
-            });
+            if (response['data'] != null) {
+              for (MapEntry e in response['data'].entries) {
+                List<String> v = [];
+                e.value.forEach((k) {
+                  v.add(k['details'].toString());
+                });
+                DateTime t = DateTime.parse(e.key);
+
+                events["${t.year}-${t.month}-${t.day}"] = v;
+              }
+              date_events = events[
+                      "${_selectedDay.year}-${_selectedDay.month}-${_selectedDay.day}"] ??
+                  [];
+              setState(() {});
+            }
           }
         } else {
           if (mounted)
@@ -113,7 +114,6 @@ class _CalendarPageState extends State<CalendarPage> {
     super.didChangeDependencies();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -127,45 +127,55 @@ class _CalendarPageState extends State<CalendarPage> {
                 color: Colors.black,
               ),
             ),
-            body: isLoading ? Center(child: CircularProgressIndicator(color: primaryColorRGB(1),),) : Column(
-              children: [
-                TableCalendar(
-                  calendarFormat: _calendarFormat,
-                  onFormatChanged: (format) {
-                    setState(() {
-                      _calendarFormat = format;
-                    });
-                  },
-                  firstDay: DateTime.utc(2010, 10, 16),
-                  lastDay: DateTime.utc(2040, 3, 14),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) {
-                    return isSameDay(_selectedDay, day);
-                  },
-                  eventLoader: (day) {
-                    return _getEventsForDay(day);
-                  },
-                  onDaySelected: (selectedDay, focusedDay) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                      _focusedDay =
-                          focusedDay; // update `_focusedDay` here as well
-                      date_events = events["${_selectedDay.year}-${_selectedDay.month}-${_selectedDay.day}"] ?? [];
-                    });
-                  },
-                ),
-               Expanded(child:  ListView.builder(
-                padding: EdgeInsets.only(top: 15, left: 15, right: 15),
-                  itemCount: date_events.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      elevation: 4,
-                      child: ListTile(
-                      title: Text(date_events[index]),
+            body: isLoading
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: primaryColorRGB(1),
                     ),
-                    );
-                },))
-              ],
-            )));
+                  )
+                : Column(
+                    children: [
+                      TableCalendar(
+                        calendarFormat: _calendarFormat,
+                        onFormatChanged: (format) {
+                          setState(() {
+                            _calendarFormat = format;
+                          });
+                        },
+                        firstDay: DateTime.utc(2010, 10, 16),
+                        lastDay: DateTime.utc(2040, 3, 14),
+                        focusedDay: _focusedDay,
+                        selectedDayPredicate: (day) {
+                          return isSameDay(_selectedDay, day);
+                        },
+                        eventLoader: (day) {
+                          return _getEventsForDay(day);
+                        },
+                        onDaySelected: (selectedDay, focusedDay) {
+                          setState(() {
+                            _selectedDay = selectedDay;
+                            _focusedDay =
+                                focusedDay; // update `_focusedDay` here as well
+                            date_events = events[
+                                    "${_selectedDay.year}-${_selectedDay.month}-${_selectedDay.day}"] ??
+                                [];
+                          });
+                        },
+                      ),
+                      Expanded(
+                          child: ListView.builder(
+                        padding: EdgeInsets.only(top: 15, left: 15, right: 15),
+                        itemCount: date_events.length,
+                        itemBuilder: (context, index) {
+                          return Card(
+                            elevation: 4,
+                            child: ListTile(
+                              title: Text(date_events[index]),
+                            ),
+                          );
+                        },
+                      ))
+                    ],
+                  )));
   }
 }

@@ -112,19 +112,23 @@ class _ContactPageState extends State<ContactPage> {
           "POST", Uri.parse(api_endpoint + "api/v1/contact"));
       request.headers['Authorization'] = "Bearer " + token!;
       if (attach_image != null) {
-        // resized Image
-        Img.Image? image_temp =
-            Img.decodeImage(File(attach_image!.path).readAsBytesSync());
-        if (image_temp == null) {
-          return;
-        }
-        Img.Image resized_img = Img.copyResize(image_temp, width: 300);
-        // End
+        // // resized Image
+        // Img.Image? image_temp =
+        //     Img.decodeImage(File(attach_image!.path).readAsBytesSync());
+        // if (image_temp == null) {
+        //   return;
+        // }
+        // Img.Image resized_img = Img.copyResize(image_temp, width: 300);
+        // // End
+
+        // request.files.add(http.MultipartFile.fromBytes(
+        //     'attach_image', Img.encodeJpg(resized_img),
+        //     filename: 'resized_image.jpg',
+        //     contentType: MediaType.parse('image/jpeg')));
 
         request.files.add(http.MultipartFile.fromBytes(
-            'attach_image', Img.encodeJpg(resized_img),
-            filename: 'resized_image.jpg',
-            contentType: MediaType.parse('image/jpeg')));
+            'attach_image', File(attach_image!.path).readAsBytesSync(),
+            filename: attach_image!.path));
       }
       request.fields['name'] = name.text;
       request.fields['email'] = email.text;

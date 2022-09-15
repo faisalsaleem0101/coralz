@@ -97,19 +97,23 @@ class _EditPageFormState extends State<EditPageForm> {
           "POST", Uri.parse(api_endpoint + "api/v1/user"));
       request.headers['Authorization'] = "Bearer " + token!;
       if (avatar != null) {
-        // resized Image
-        Img.Image? image_temp =
-            Img.decodeImage(File(avatar!.path).readAsBytesSync());
-        if (image_temp == null) {
-          return;
-        }
-        Img.Image resized_img = Img.copyResize(image_temp, width: 300);
-        // End
+        // // resized Image
+        // Img.Image? image_temp =
+        //     Img.decodeImage(File(avatar!.path).readAsBytesSync());
+        // if (image_temp == null) {
+        //   return;
+        // }
+        // Img.Image resized_img = Img.copyResize(image_temp, width: 300);
+        // // End
 
-        request.files.add(http.MultipartFile.fromBytes(
-            'avatar', Img.encodeJpg(resized_img),
-            filename: 'resized_image.jpg',
-            contentType: MediaType.parse('image/jpeg')));
+        // request.files.add(http.MultipartFile.fromBytes(
+        //     'avatar', Img.encodeJpg(resized_img),
+        //     filename: 'resized_image.jpg',
+        //     contentType: MediaType.parse('image/jpeg')));
+
+         request.files.add(http.MultipartFile.fromBytes(
+            'avatar', File(avatar!.path).readAsBytesSync(),
+            filename: avatar!.path));
       }
       request.fields['name'] = name.text;
       request.fields['mobile_number'] = mobile_number.text;
