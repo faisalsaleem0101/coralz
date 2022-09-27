@@ -6,9 +6,11 @@ import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/shimmer_loading.dart';
 import 'package:coralz/screens/home/shop/coralz_shop_page.dart';
+import 'package:coralz/screens/home/shop/map_data.dart';
 import 'package:coralz/screens/home/shop/suppliers_map_page.dart';
 import 'package:coralz/screens/home/shop/wanted_page.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
@@ -83,7 +85,6 @@ Widget PageData(BuildContext context) {
       GestureDetector(
         onTap: () {
           Navigator.push(context, MaterialPageRoute(builder: (builder) => SuppliersMapPage()));
-
         },
         child: Container(
         padding: EdgeInsets.fromLTRB(10, 10, 10, 30),

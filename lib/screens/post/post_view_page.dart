@@ -5,14 +5,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/chat/chat_page.dart';
+import 'package:coralz/screens/home/user/user_profile_page.dart';
 import 'package:coralz/screens/post/mark_as_sold.dart';
 import 'package:coralz/screens/post/post_comments_page.dart';
 import 'package:coralz/screens/post/post_edit_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:slide_countdown/slide_countdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Post {
@@ -39,6 +43,7 @@ class Post {
   String? paymentLink;
   int isSold = 0;
   bool expire;
+  bool isWanted = false;
   Post(
       this.id,
       this.user_id,
@@ -62,7 +67,8 @@ class Post {
       this.user_rating,
       this.paymentLink,
       this.isSold,
-      this.expire);
+      this.expire,
+      this.isWanted);
 }
 
 class Offer {
@@ -74,7 +80,9 @@ class Offer {
 
 class PostViewPage extends StatefulWidget {
   final String id;
-  const PostViewPage(this.id, {Key? key}) : super(key: key);
+  final String? notification_id;
+  const PostViewPage(this.id, {this.notification_id, Key? key})
+      : super(key: key);
 
   @override
   State<PostViewPage> createState() => _PostViewPageState();
@@ -86,6 +94,8 @@ class _PostViewPageState extends State<PostViewPage> {
   List<Offer> offers = [];
   List<String> images = [];
   late String user_id;
+
+  var bought_by = null;
 
   int like_state = 1; // 1-like, 2-wait
   bool deleting = false;
@@ -258,7 +268,7 @@ class _PostViewPageState extends State<PostViewPage> {
     }
   }
 
-  Future<void> markAsSold(BuildContext context) async {
+  Future<void> markAsSold(BuildContext context, String? id) async {
     if (mounted) {
       setState(() {
         markingAsSold = true;
@@ -268,7 +278,12 @@ class _PostViewPageState extends State<PostViewPage> {
       String? token = await getBearerToken();
       var result = await http.post(
           Uri.parse("${api_endpoint}api/v1/mark-as-sold-post/${widget.id}"),
-          headers: {"Authorization": "Bearer " + token!});
+          body: {
+            "buyer_user_id": id,
+          },
+          headers: {
+            "Authorization": "Bearer " + token!
+          });
       if (result.statusCode == 200) {
         var response = jsonDecode(result.body);
         // print(response);
@@ -279,7 +294,7 @@ class _PostViewPageState extends State<PostViewPage> {
             backgroundColor: Colors.transparent,
             content: AwesomeSnackbarContent(
               title: 'Success!',
-              message: 'Successfully Saved!',
+              message: 'Successfully Sold!',
               contentType: ContentType.success,
             ),
           ));
@@ -346,7 +361,8 @@ class _PostViewPageState extends State<PostViewPage> {
     try {
       String? token = await getBearerToken();
       var result = await http.get(
-          Uri.parse(api_endpoint + "api/v1/post/${widget.id}"),
+          Uri.parse(api_endpoint +
+              "api/v1/post/${widget.id}?notification_id=${widget.notification_id}"),
           headers: {"Authorization": "Bearer " + token!});
       if (result.statusCode == 200) {
         var response = jsonDecode(result.body);
@@ -361,31 +377,33 @@ class _PostViewPageState extends State<PostViewPage> {
 
             setState(() {
               data = Post(
-                  response['data']['id'].toString(),
-                  response['data']['user_id'].toString(),
-                  response['data']['title'].toString(),
-                  response['data']['description'].toString(),
-                  response['data']['price'].toString(),
-                  response['data']['delivery_price'].toString(),
-                  response['data']['country'].toString(),
-                  response['data']['delivery'].toString(),
-                  response['data']['collection'].toString(),
-                  response['data']['start_date'].toString(),
-                  response['data']['end_date'].toString(),
-                  response['data']['type'].toString(),
-                  response['data']['post_views'],
-                  response['data']['post_likes'],
-                  response['data']['post_comments'],
-                  response['data']['is_like'],
-                  response['data']['user']['id'].toString(),
-                  response['data']['user']['name'].toString(),
-                  response['data']['user']['avatar'],
-                  response['data']['user_rating'] != null
-                      ? double.parse(response['data']['user_rating'].toString())
-                      : double.parse('0'),
-                  response['data']['user']['payment_link'],
-                  response['data']['is_sold'],
-                  response['data']['expire']);
+                response['data']['id'].toString(),
+                response['data']['user_id'].toString(),
+                response['data']['title'].toString(),
+                response['data']['description'].toString(),
+                response['data']['price'].toString(),
+                response['data']['delivery_price'].toString(),
+                response['data']['country'].toString(),
+                response['data']['delivery'].toString(),
+                response['data']['collection'].toString(),
+                response['data']['start_date'].toString(),
+                response['data']['end_date'].toString(),
+                response['data']['type'].toString(),
+                response['data']['post_views'],
+                response['data']['post_likes'],
+                response['data']['post_comments'],
+                response['data']['is_like'],
+                response['data']['user']['id'].toString(),
+                response['data']['user']['name'].toString(),
+                response['data']['user']['avatar'],
+                response['data']['user_rating'] != null
+                    ? double.parse(response['data']['user_rating'].toString())
+                    : double.parse('0'),
+                response['data']['user']['payment_link'],
+                response['data']['is_sold'],
+                response['data']['expire'],
+                response['data']['is_wanted'],
+              );
 
               if (response['data']['offers'] != null) {
                 response['data']['offers'].forEach((el) {
@@ -393,10 +411,12 @@ class _PostViewPageState extends State<PostViewPage> {
                       double.parse(el['amount'].toString())));
                 });
               }
+
+              bought_by = response['data']['bought_by'];
             });
           }
         }
-      }
+      } else {}
     } catch (e) {
       print(e);
     }
@@ -501,6 +521,22 @@ class _PostViewPageState extends State<PostViewPage> {
     });
   }
 
+  String getFormattedEndDate(String endDate) {
+    DateTime dateTime = DateTime.parse(endDate);
+    dateTime = dateTime.add(dateTime.timeZoneOffset);
+
+    return DateFormat().format(dateTime);
+    
+  }
+
+  Duration getDurationOfEndDate(String endDate) {
+    DateTime dateTime = DateTime.parse(endDate);
+    dateTime = dateTime.add(dateTime.timeZoneOffset);
+
+    return Duration(
+        microseconds: dateTime.difference(DateTime.now()).inMicroseconds);
+  }
+
   @override
   void didChangeDependencies() {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData(context));
@@ -517,732 +553,872 @@ class _PostViewPageState extends State<PostViewPage> {
                   color: primaryColorRGB(1),
                 ),
               )
-            : Column(
-                children: [
-                  Expanded(
-                      flex: 3,
-                      child: GestureDetector(
-                        onTap: () {
-                          displayImagesDialog();
-                        },
-                        child: Stack(
-                          children: [
-                            postViewContainer(images.length > 0
-                                ? api_endpoint + images[0]
-                                : null),
-                            SafeArea(
-                                child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            : data != null
+                ? Column(
+                    children: [
+                      Expanded(
+                          flex: 3,
+                          child: GestureDetector(
+                            onTap: () {
+                              displayImagesDialog();
+                            },
+                            child: Stack(
                               children: [
-                                Expanded(
-                                    child: Container(
-                                  alignment: Alignment.topLeft,
-                                  child: BackButton(
-                                    color: Colors.white,
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                )),
-                                Expanded(
-                                  child: Container(
-                                    margin: EdgeInsets.only(top: 12),
-                                    alignment: Alignment.topCenter,
-                                    child: FittedBox(
-                                      child: Text(
-                                        data!.title,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
+                                postViewContainer(images.length > 0
+                                    ? api_endpoint + images[0]
+                                    : null),
+                                SafeArea(
+                                    child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                        child: Container(
+                                      alignment: Alignment.topLeft,
+                                      child: BackButton(
+                                        color: Colors.white,
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                    )),
+                                    Expanded(
+                                      child: Container(
+                                        margin: EdgeInsets.only(top: 12),
+                                        alignment: Alignment.topCenter,
+                                        child: FittedBox(
+                                          child: Text(
+                                            data!.title,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                                Expanded(
-                                    child: Container(
-                                  alignment: Alignment.topRight,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.share,
-                                          color: Colors.white,
-                                        ),
-                                        onPressed: () {},
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          like_state == 1
-                                              ? (data!.isLike
-                                                  ? Icons.favorite
-                                                  : Icons
-                                                      .favorite_border_outlined)
-                                              : Icons.watch_later,
-                                          color: Colors.white,
-                                        ),
-                                        onPressed: () {
-                                          if (like_state == 1) {
-                                            likeUnlike(context);
-                                          }
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ))
-                              ],
-                            )),
-                          ],
-                        ),
-                      )),
-                  Expanded(
-                    flex: 7,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20)),
-                        color: Colors.white,
-                      ),
-                      child: Column(
-                        children: [
-                          Expanded(
-                              child: Container(
-                            child: SingleChildScrollView(
-                                child: Container(
-                              padding: EdgeInsets.only(
-                                  left: 15, right: 15, top: 15, bottom: 35),
-                              child: Column(
-                                children: [
-                                  Card(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      elevation: 6,
-                                      child: ListTile(
-                                          title: Text(
-                                            data!.title,
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          subtitle: Text(data!.expire
-                                              ? 'Expired'
-                                              : 'End Time ${data!.end_date}'),
-                                          trailing: Text(
-                                            "£" + "${data!.price}",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ))),
-                                  Card(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      elevation: 6,
-                                      child: ListTile(
-                                          title: Text(
-                                            'Delivery Price',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          trailing: Text(
-                                            "£" + "${data!.delivery_price}",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ))),
-                                  Card(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      elevation: 6,
-                                      child: ListTile(
-                                          title: Text(
-                                            'Delivery',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          trailing: Icon(
-                                            data!.delivery == '1'
-                                                ? Icons.check_box
-                                                : Icons
-                                                    .check_box_outline_blank_outlined,
-                                            color: primaryColorRGB(1),
-                                          ))),
-                                  Card(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      elevation: 6,
-                                      child: ListTile(
-                                          title: Text(
-                                            'Collection',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          trailing: Icon(
-                                            data!.collection == '1'
-                                                ? Icons.check_box
-                                                : Icons
-                                                    .check_box_outline_blank_outlined,
-                                            color: primaryColorRGB(1),
-                                          ))),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  data!.type == '1'
-                                      ? Column(
-                                          children: [
-                                            data!.expire ? Text('Post Expired') : Column(
-                                              children: [
-                                                Text(
-                                                  'Offer',
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 18),
-                                                ),
-                                                Card(
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              50)),
-                                                  elevation: 6,
-                                                  child: TextFormField(
-                                                    controller: amount,
-                                                    decoration: InputDecoration(
-                                                      hintText: '£',
-                                                      hintStyle: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                      border: InputBorder.none,
-                                                      focusedBorder:
-                                                          InputBorder.none,
-                                                      enabledBorder:
-                                                          InputBorder.none,
-                                                      errorBorder:
-                                                          InputBorder.none,
-                                                      disabledBorder:
-                                                          InputBorder.none,
-                                                      contentPadding:
-                                                          EdgeInsets.only(
-                                                              left: 15,
-                                                              bottom: 11,
-                                                              top: 11,
-                                                              right: 15),
-                                                    ),
-                                                  ),
-                                                ),
-                                                amountError != null
-                                                    ? Align(
-                                                        alignment: Alignment
-                                                            .centerLeft,
-                                                        child: Text(
-                                                          amountError!,
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.red),
-                                                        ),
-                                                      )
-                                                    : Center(),
-                                                SizedBox(
-                                                  height: 5,
-                                                ),
-                                                offerSubmitting
-                                                    ? CircularProgressIndicator(
-                                                        color:
-                                                            secondaryColorRGB(
-                                                                1),
-                                                      )
-                                                    : Container(
-                                                        width: double.infinity,
-                                                        padding:
-                                                            EdgeInsets.fromLTRB(
-                                                                70, 0, 70, 0),
-                                                        child: ElevatedButton(
-                                                          onPressed: () {
-                                                            _submitOffer(
-                                                                context);
-                                                          },
-                                                          child: Text('Submit'),
-                                                          style: ElevatedButton.styleFrom(
-                                                              primary:
-                                                                  secondaryColorRGB(
-                                                                      1),
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .all(15),
-                                                              shape: RoundedRectangleBorder(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              32.0)),
-                                                              elevation: 6),
-                                                        )),
-                                              ],
+                                    Expanded(
+                                        child: Container(
+                                      alignment: Alignment.topRight,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.share,
+                                              color: Colors.white,
                                             ),
-                                            ListView.builder(
-                                              padding: EdgeInsets.zero,
-                                              shrinkWrap: true,
-                                              itemCount: offers.length,
-                                              itemBuilder: (context, index) {
-                                                return ListTile(
-                                                  leading: data!.expire ? Icon(Icons.star, color: Colors.amber,) : Icon(Icons.pending),
-                                                  title:
-                                                      Text(offers[index].name),
-                                                  subtitle:
-                                                      Text(offers[index].email),
-                                                  trailing: Text(
-                                                      "£${offers[index].amount}"),
-                                                );
-                                              },
-                                            )
-                                          ],
-                                        )
-                                      : Container(),
-                                  SizedBox(
-                                    height: 15,
-                                  ),
-                                  Container(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Description",
-                                          style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        SizedBox(
-                                          height: 6,
-                                        ),
-                                        Card(
+                                            onPressed: () {
+                                              Share.share(
+                                                  "${api_endpoint}share?post=${widget.id}");
+                                            },
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                              like_state == 1
+                                                  ? (data!.isLike
+                                                      ? Icons.favorite
+                                                      : Icons
+                                                          .favorite_border_outlined)
+                                                  : Icons.watch_later,
+                                              color: Colors.red,
+                                            ),
+                                            onPressed: () {
+                                              if (like_state == 1) {
+                                                likeUnlike(context);
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ))
+                                  ],
+                                )),
+                              ],
+                            ),
+                          )),
+                      Expanded(
+                        flex: 7,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(20),
+                                topRight: Radius.circular(20)),
+                            color: Colors.white,
+                          ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                  child: Container(
+                                child: SingleChildScrollView(
+                                    child: Container(
+                                  padding: EdgeInsets.only(
+                                      left: 15, right: 15, top: 15, bottom: 35),
+                                  child: Column(
+                                    children: [
+                                      Card(
                                           shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(10)),
                                           elevation: 6,
-                                          shadowColor: Colors.grey.shade500,
-                                          child: TextFormField(
-                                            initialValue: data!.description,
-                                            maxLines: 15,
-                                            minLines: 4,
-                                            decoration: InputDecoration(
-                                              enabled: false,
-                                              hintText: "No Description",
-                                              border: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                              enabledBorder: InputBorder.none,
-                                              errorBorder: InputBorder.none,
-                                              disabledBorder: InputBorder.none,
-                                              contentPadding: EdgeInsets.only(
-                                                  left: 15,
-                                                  bottom: 11,
-                                                  top: 11,
-                                                  right: 15),
+                                          child: ListTile(
+                                              title: Text(
+                                                data!.title,
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              subtitle: data!.type == '1'
+                                                  ? (data!.expire
+                                                      ? const Text('Expired')
+                                                      : SlideCountdownSeparated(
+                                                          duration:
+                                                              getDurationOfEndDate(
+                                                                  data!
+                                                                      .end_date),
+                                                        ))
+                                                  : Text(data!.expire
+                                                      ? 'Expired'
+                                                      : 'End Time ${getFormattedEndDate(data!.end_date)}'),
+                                              trailing: Text(
+                                                "£" + "${data!.price}",
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ))),
+                                      Card(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          elevation: 6,
+                                          child: ListTile(
+                                              title: Text(
+                                                'Delivery Price',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              trailing: Text(
+                                                "£" + "${data!.delivery_price}",
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ))),
+                                      Card(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          elevation: 6,
+                                          child: ListTile(
+                                              title: Text(
+                                                'Delivery',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              trailing: Icon(
+                                                data!.delivery == '1'
+                                                    ? Icons.check_box
+                                                    : Icons
+                                                        .check_box_outline_blank_outlined,
+                                                color: primaryColorRGB(1),
+                                              ))),
+                                      Card(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          elevation: 6,
+                                          child: ListTile(
+                                              title: Text(
+                                                'Collection',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              trailing: Icon(
+                                                data!.collection == '1'
+                                                    ? Icons.check_box
+                                                    : Icons
+                                                        .check_box_outline_blank_outlined,
+                                                color: primaryColorRGB(1),
+                                              ))),
+                                      SizedBox(
+                                        height: 20,
+                                      ),
+                                      data!.type == '1'
+                                          ? Column(
+                                              children: [
+                                                data!.expire
+                                                    ? Text('Post Expired')
+                                                    : Column(
+                                                        children: [
+                                                          Text(
+                                                            'Offer',
+                                                            style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 18),
+                                                          ),
+                                                          Card(
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            50)),
+                                                            elevation: 6,
+                                                            child:
+                                                                TextFormField(
+                                                              controller:
+                                                                  amount,
+                                                              decoration:
+                                                                  InputDecoration(
+                                                                hintText: '£',
+                                                                hintStyle: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold),
+                                                                border:
+                                                                    InputBorder
+                                                                        .none,
+                                                                focusedBorder:
+                                                                    InputBorder
+                                                                        .none,
+                                                                enabledBorder:
+                                                                    InputBorder
+                                                                        .none,
+                                                                errorBorder:
+                                                                    InputBorder
+                                                                        .none,
+                                                                disabledBorder:
+                                                                    InputBorder
+                                                                        .none,
+                                                                contentPadding:
+                                                                    EdgeInsets.only(
+                                                                        left:
+                                                                            15,
+                                                                        bottom:
+                                                                            11,
+                                                                        top: 11,
+                                                                        right:
+                                                                            15),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          amountError != null
+                                                              ? Align(
+                                                                  alignment:
+                                                                      Alignment
+                                                                          .centerLeft,
+                                                                  child: Text(
+                                                                    amountError!,
+                                                                    style: TextStyle(
+                                                                        color: Colors
+                                                                            .red),
+                                                                  ),
+                                                                )
+                                                              : Center(),
+                                                          SizedBox(
+                                                            height: 5,
+                                                          ),
+                                                          offerSubmitting
+                                                              ? CircularProgressIndicator(
+                                                                  color:
+                                                                      secondaryColorRGB(
+                                                                          1),
+                                                                )
+                                                              : Container(
+                                                                  width: double
+                                                                      .infinity,
+                                                                  padding: EdgeInsets
+                                                                      .fromLTRB(
+                                                                          70,
+                                                                          0,
+                                                                          70,
+                                                                          0),
+                                                                  child:
+                                                                      ElevatedButton(
+                                                                    onPressed:
+                                                                        () {
+                                                                      _submitOffer(
+                                                                          context);
+                                                                    },
+                                                                    child: Text(
+                                                                        'Submit'),
+                                                                    style: ElevatedButton.styleFrom(
+                                                                        primary:
+                                                                            secondaryColorRGB(
+                                                                                1),
+                                                                        padding:
+                                                                            EdgeInsets.all(
+                                                                                15),
+                                                                        shape: RoundedRectangleBorder(
+                                                                            borderRadius: BorderRadius.circular(
+                                                                                32.0)),
+                                                                        elevation:
+                                                                            6),
+                                                                  )),
+                                                        ],
+                                                      ),
+                                                ListView.builder(
+                                                  padding: EdgeInsets.zero,
+                                                  shrinkWrap: true,
+                                                  itemCount: offers.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return ListTile(
+                                                      title: Text(
+                                                          offers[index].name),
+                                                      subtitle: Text(
+                                                          offers[index].email),
+                                                      trailing: Text(
+                                                          "£${offers[index].amount}"),
+                                                    );
+                                                  },
+                                                )
+                                              ],
+                                            )
+                                          : Container(),
+                                      SizedBox(
+                                        height: 15,
+                                      ),
+                                      Container(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Description",
+                                              style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold),
                                             ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Card(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      elevation: 6,
-                                      child: ListTile(
-                                          title: Text(
-                                            'Country',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          trailing: Text(
-                                            "${data!.country}",
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold),
-                                          ))),
-                                  SizedBox(
-                                    height: 15,
-                                  ),
-                                  GridView(
-                                    padding: EdgeInsets.only(
-                                        left: 15,
-                                        right: 15,
-                                        top: 10,
-                                        bottom: 10),
-                                    shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(),
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 3,
-                                            crossAxisSpacing: 10,
-                                            mainAxisSpacing: 10),
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () {},
-                                        child: Container(
-                                          alignment: Alignment.center,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            color: Colors.white,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                spreadRadius: 1,
-                                                blurRadius: 6,
-                                                offset: Offset(0,
-                                                    3), // changes position of shadow
+                                            SizedBox(
+                                              height: 6,
+                                            ),
+                                            Card(
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10)),
+                                              elevation: 6,
+                                              shadowColor: Colors.grey.shade500,
+                                              child: TextFormField(
+                                                initialValue: data!.description,
+                                                maxLines: 15,
+                                                minLines: 4,
+                                                decoration: InputDecoration(
+                                                  enabled: false,
+                                                  hintText: "No Description",
+                                                  border: InputBorder.none,
+                                                  focusedBorder:
+                                                      InputBorder.none,
+                                                  enabledBorder:
+                                                      InputBorder.none,
+                                                  errorBorder: InputBorder.none,
+                                                  disabledBorder:
+                                                      InputBorder.none,
+                                                  contentPadding:
+                                                      EdgeInsets.only(
+                                                          left: 15,
+                                                          bottom: 11,
+                                                          top: 11,
+                                                          right: 15),
+                                                ),
                                               ),
-                                            ],
-                                          ),
-                                          child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(Icons.remove_red_eye),
-                                                Text('${data!.views} views')
-                                              ]),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      GestureDetector(
-                                        onTap: () {},
-                                        child: Container(
-                                          alignment: Alignment.center,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            color: Colors.white,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                spreadRadius: 1,
-                                                blurRadius: 6,
-                                                offset: Offset(0,
-                                                    3), // changes position of shadow
+                                      Card(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          elevation: 6,
+                                          child: ListTile(
+                                              title: Text(
+                                                'Country',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
                                               ),
-                                            ],
-                                          ),
-                                          child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(Icons.favorite),
-                                                Text('${data!.likes} Likes')
-                                              ]),
-                                        ),
+                                              trailing: Text(
+                                                "${data!.country}",
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ))),
+                                      SizedBox(
+                                        height: 15,
                                       ),
-                                      GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (builder) =>
-                                                      PostCommentPage(
-                                                          widget.id)));
-                                        },
-                                        child: Container(
-                                          alignment: Alignment.center,
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            color: Colors.white,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.grey
-                                                    .withOpacity(0.4),
-                                                spreadRadius: 1,
-                                                blurRadius: 6,
-                                                offset: Offset(0,
-                                                    3), // changes position of shadow
-                                              ),
-                                            ],
-                                          ),
-                                          child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(Icons.comment),
-                                                Text(
-                                                    '${data!.comments} comments')
-                                              ]),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    height: 15,
-                                  ),
-                                  Card(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10)),
-                                      elevation: 6,
-                                      child: Column(
+                                      GridView(
+                                        padding: EdgeInsets.only(
+                                            left: 15,
+                                            right: 15,
+                                            top: 10,
+                                            bottom: 10),
+                                        shrinkWrap: true,
+                                        physics: NeverScrollableScrollPhysics(),
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: 3,
+                                                crossAxisSpacing: 10,
+                                                mainAxisSpacing: 10),
                                         children: [
-                                          ListTile(
-                                            title: Text(data!.user_name),
-                                            subtitle: RatingBarIndicator(
-                                              itemCount: 5,
-                                              itemSize: 20,
-                                              rating: data!.user_rating,
-                                              itemBuilder: (context, index) {
-                                                return Icon(
-                                                  Icons.star,
-                                                  color: Colors.amber,
-                                                );
-                                              },
+                                          GestureDetector(
+                                            onTap: () {},
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                color: Colors.white,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.4),
+                                                    spreadRadius: 1,
+                                                    blurRadius: 6,
+                                                    offset: Offset(0,
+                                                        3), // changes position of shadow
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.remove_red_eye),
+                                                    Text('${data!.views} views')
+                                                  ]),
                                             ),
                                           ),
-                                          Container(
-                                              width: double.infinity,
-                                              padding: EdgeInsets.fromLTRB(
-                                                  70, 0, 70, 0),
-                                              child: OutlinedButton.icon(
-                                                icon: Icon(
-                                                  Icons.chat,
-                                                  color: Colors.black,
-                                                ),
-                                                label: Text(
-                                                  "Chat",
-                                                  style: TextStyle(
-                                                      color: Colors.black),
-                                                ),
-                                                onPressed: () {
+                                          GestureDetector(
+                                            onTap: () {},
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                color: Colors.white,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.4),
+                                                    spreadRadius: 1,
+                                                    blurRadius: 6,
+                                                    offset: Offset(0,
+                                                        3), // changes position of shadow
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.favorite),
+                                                    Text('${data!.likes} Likes')
+                                                  ]),
+                                            ),
+                                          ),
+                                          GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (builder) =>
+                                                          PostCommentPage(
+                                                              widget.id)));
+                                            },
+                                            child: Container(
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                color: Colors.white,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.grey
+                                                        .withOpacity(0.4),
+                                                    spreadRadius: 1,
+                                                    blurRadius: 6,
+                                                    offset: Offset(0,
+                                                        3), // changes position of shadow
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.comment),
+                                                    Text(
+                                                        '${data!.comments} comments')
+                                                  ]),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 15,
+                                      ),
+                                      Card(
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10)),
+                                          elevation: 6,
+                                          child: Column(
+                                            children: [
+                                              ListTile(
+                                                onTap: () {
                                                   Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
                                                           builder: (builder) =>
-                                                              ChatPage(
-                                                                data!.user_id,
-                                                                data!
-                                                                    .post_user_id,
-                                                                data!.user_name,
-                                                              )));
+                                                              UserProfilePage(data!
+                                                                  .post_user_id)));
                                                 },
-                                                style: ElevatedButton.styleFrom(
-                                                  padding: EdgeInsets.all(15),
-                                                  side: BorderSide(
-                                                      width: 2.0,
-                                                      color: Colors.black),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            32.0),
+                                                title: Text(data!.user_name),
+                                                subtitle: RatingBarIndicator(
+                                                  itemCount: 5,
+                                                  itemSize: 20,
+                                                  rating: data!.user_rating,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return Icon(
+                                                      Icons.star,
+                                                      color: Colors.amber,
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                              Container(
+                                                  width: double.infinity,
+                                                  padding: EdgeInsets.fromLTRB(
+                                                      70, 0, 70, 0),
+                                                  child: OutlinedButton.icon(
+                                                    icon: Icon(
+                                                      Icons.chat,
+                                                      color: Colors.black,
+                                                    ),
+                                                    label: Text(
+                                                      "Chat",
+                                                      style: TextStyle(
+                                                          color: Colors.black),
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder:
+                                                                  (builder) =>
+                                                                      ChatPage(
+                                                                        data!
+                                                                            .user_id,
+                                                                        data!
+                                                                            .post_user_id,
+                                                                        data!
+                                                                            .user_name,
+                                                                      )));
+                                                    },
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      padding:
+                                                          EdgeInsets.all(15),
+                                                      side: BorderSide(
+                                                          width: 2.0,
+                                                          color: Colors.black),
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(32.0),
+                                                      ),
+                                                    ),
+                                                  )),
+                                              SizedBox(
+                                                height: 5,
+                                              ),
+                                              Container(
+                                                  width: double.infinity,
+                                                  padding: EdgeInsets.fromLTRB(
+                                                      20, 0, 20, 0),
+                                                  child: ElevatedButton.icon(
+                                                    icon: Icon(Icons.payment),
+                                                    label: Text(
+                                                      "Payment Link",
+                                                    ),
+                                                    onPressed: () async {
+                                                      var uri = Uri.parse(
+                                                          data!.paymentLink!);
+                                                      if (await canLaunchUrl(
+                                                          uri)) {
+                                                        await launchUrl(uri);
+                                                      } else {}
+                                                    },
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      primary: Colors.black,
+                                                      onPrimary: Colors.white,
+                                                      padding:
+                                                          EdgeInsets.all(10),
+                                                      side: BorderSide(
+                                                          width: 2.0,
+                                                          color: Colors.black),
+                                                    ),
+                                                  )),
+                                              SizedBox(
+                                                height: 15,
+                                              ),
+                                            ],
+                                          )),
+                                      SizedBox(
+                                        height: 15,
+                                      ),
+                                      user_id == data!.user_id &&
+                                              data!.isSold != 1
+                                          ? GridView(
+                                              padding: EdgeInsets.only(
+                                                  left: 15,
+                                                  right: 15,
+                                                  top: 10,
+                                                  bottom: 10),
+                                              shrinkWrap: true,
+                                              physics:
+                                                  NeverScrollableScrollPhysics(),
+                                              gridDelegate:
+                                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                                      crossAxisCount: 3,
+                                                      crossAxisSpacing: 10,
+                                                      mainAxisSpacing: 10),
+                                              children: [
+                                                GestureDetector(
+                                                  onTap: () async {
+                                                    if (data!.isWanted) {
+                                                      return;
+                                                    }
+                                                    var selected_id =
+                                                        await showDialog(
+                                                            context: context,
+                                                            builder: (_) =>
+                                                                MarkAsSold());
+                                                    if (selected_id != null) {
+                                                      markAsSold(
+                                                          context, selected_id);
+                                                    }
+                                                  },
+                                                  child: Container(
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      color: Colors.green,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.grey
+                                                              .withOpacity(0.4),
+                                                          spreadRadius: 1,
+                                                          blurRadius: 6,
+                                                          offset: Offset(0,
+                                                              3), // changes position of shadow
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: markingAsSold
+                                                        ? Center(
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                    color: Colors
+                                                                        .white),
+                                                          )
+                                                        : Column(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                                Icon(
+                                                                  Icons
+                                                                      .done_all_outlined,
+                                                                  color: Colors
+                                                                      .white,
+                                                                ),
+                                                                Text(
+                                                                    data!.isWanted
+                                                                        ? '-'
+                                                                        : 'Mark as sold',
+                                                                    style: TextStyle(
+                                                                        color: Colors
+                                                                            .white))
+                                                              ]),
                                                   ),
                                                 ),
-                                              )),
-                                          SizedBox(
-                                            height: 5,
-                                          ),
-                                          Container(
-                                              width: double.infinity,
-                                              padding: EdgeInsets.fromLTRB(
-                                                  20, 0, 20, 0),
-                                              child: ElevatedButton.icon(
-                                                icon: Icon(Icons.payment),
-                                                label: Text(
-                                                  "Payment Link",
-                                                ),
-                                                onPressed: () async {
-                                                  var uri = Uri.parse(
-                                                      data!.paymentLink!);
-                                                  if (await canLaunchUrl(uri)) {
-                                                    await launchUrl(uri);
-                                                  } else {}
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  primary: Colors.black,
-                                                  onPrimary: Colors.white,
-                                                  padding: EdgeInsets.all(10),
-                                                  side: BorderSide(
-                                                      width: 2.0,
-                                                      color: Colors.black),
-                                                ),
-                                              )),
-                                          SizedBox(
-                                            height: 15,
-                                          ),
-                                        ],
-                                      )),
-                                  SizedBox(
-                                    height: 15,
-                                  ),
-                                  user_id == data!.user_id && data!.isSold != 1
-                                      ? GridView(
-                                          padding: EdgeInsets.only(
-                                              left: 15,
-                                              right: 15,
-                                              top: 10,
-                                              bottom: 10),
-                                          shrinkWrap: true,
-                                          physics:
-                                              NeverScrollableScrollPhysics(),
-                                          gridDelegate:
-                                              SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: 3,
-                                                  crossAxisSpacing: 10,
-                                                  mainAxisSpacing: 10),
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () {
-                                                markAsSold(context);
-                                                // var selected_id = await showDialog(
-                                                //     context: context,
-                                                //     builder: (_) =>
-                                                //         MarkAsSold());
-                                                // print(selected_id);
-                                              },
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  color: Colors.green,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      spreadRadius: 1,
-                                                      blurRadius: 6,
-                                                      offset: Offset(0,
-                                                          3), // changes position of shadow
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (builder) =>
+                                                                PostEditPage(
+                                                                    data!.id)));
+                                                  },
+                                                  child: Container(
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      color: Colors.blue,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.grey
+                                                              .withOpacity(0.4),
+                                                          spreadRadius: 1,
+                                                          blurRadius: 6,
+                                                          offset: Offset(0,
+                                                              3), // changes position of shadow
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
-                                                ),
-                                                child: markingAsSold
-                                                    ? Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                                color: Colors
-                                                                    .white),
-                                                      )
-                                                    : Column(
+                                                    child: Column(
                                                         mainAxisAlignment:
                                                             MainAxisAlignment
                                                                 .center,
                                                         children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .done_all_outlined,
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                            Text('Mark as sold',
-                                                                style: TextStyle(
-                                                                    color: Colors
-                                                                        .white))
-                                                          ]),
-                                              ),
-                                            ),
-                                            GestureDetector(
-                                              onTap: () {
-                                                Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: (builder) =>
-                                                            PostEditPage(
-                                                                data!.id)));
-                                              },
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  color: Colors.blue,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      spreadRadius: 1,
-                                                      blurRadius: 6,
-                                                      offset: Offset(0,
-                                                          3), // changes position of shadow
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Icon(
-                                                        Icons.edit,
-                                                        color: Colors.white,
-                                                      ),
-                                                      Text('Edit',
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.white))
-                                                    ]),
-                                              ),
-                                            ),
-                                            GestureDetector(
-                                              onTap: () {
-                                                delete(context);
-                                              },
-                                              child: Container(
-                                                alignment: Alignment.center,
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  color: Colors.red,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.4),
-                                                      spreadRadius: 1,
-                                                      blurRadius: 6,
-                                                      offset: Offset(0,
-                                                          3), // changes position of shadow
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: deleting
-                                                    ? Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                                color: Colors
-                                                                    .white),
-                                                      )
-                                                    : Column(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                            Icon(
-                                                              Icons.delete,
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                            Text(
-                                                              'Delete',
+                                                          Icon(
+                                                            Icons.edit,
+                                                            color: Colors.white,
+                                                          ),
+                                                          Text('Edit',
                                                               style: TextStyle(
                                                                   color: Colors
-                                                                      .white),
-                                                            )
-                                                          ]),
-                                              ),
+                                                                      .white))
+                                                        ]),
+                                                  ),
+                                                ),
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    delete(context);
+                                                  },
+                                                  child: Container(
+                                                    alignment: Alignment.center,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      color: Colors.red,
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.grey
+                                                              .withOpacity(0.4),
+                                                          spreadRadius: 1,
+                                                          blurRadius: 6,
+                                                          offset: Offset(0,
+                                                              3), // changes position of shadow
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: deleting
+                                                        ? Center(
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                    color: Colors
+                                                                        .white),
+                                                          )
+                                                        : Column(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                                Icon(
+                                                                  Icons.delete,
+                                                                  color: Colors
+                                                                      .white,
+                                                                ),
+                                                                Text(
+                                                                  'Delete',
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .white),
+                                                                )
+                                                              ]),
+                                                  ),
+                                                )
+                                              ],
                                             )
-                                          ],
-                                        )
-                                      : Container()
-                                ],
-                              ),
-                            )),
-                          ))
-                        ],
+                                          : Container(),
+                                      SizedBox(
+                                        height: 15,
+                                      ),
+                                      bought_by != null
+                                          ? Card(
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10)),
+                                              elevation: 6,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  SizedBox(
+                                                    height: 5,
+                                                  ),
+                                                  Container(
+                                                    padding: EdgeInsets.only(
+                                                        left: 10),
+                                                    child: Text(
+                                                      data!.type != '1'
+                                                          ? 'Bought By: '
+                                                          : 'Won By: ',
+                                                      textAlign:
+                                                          TextAlign.start,
+                                                    ),
+                                                  ),
+                                                  ListTile(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (builder) =>
+                                                                  UserProfilePage(
+                                                                      bought_by[
+                                                                              'id']
+                                                                          .toString())));
+                                                    },
+                                                    title:
+                                                        Text(bought_by['name']),
+                                                    subtitle: Text(
+                                                        bought_by['email']),
+                                                    trailing: Icon(
+                                                        Icons.navigate_next),
+                                                  ),
+                                                ],
+                                              ))
+                                          : Container(),
+                                    ],
+                                  ),
+                                )),
+                              ))
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ));
+                    ],
+                  )
+                : Center(
+                    child: Container(
+                    width: 100,
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: AssetImage("assets/images/nodata-found.png"),
+                            fit: BoxFit.contain)),
+                  )));
   }
 
   displayImagesDialog() {
@@ -1323,12 +1499,37 @@ class _PostViewPageState extends State<PostViewPage> {
     return CachedNetworkImage(
         imageUrl: image,
         imageBuilder: (context, imageProvider) => Container(
-              decoration: BoxDecoration(
-                  image: DecorationImage(
-                      alignment: Alignment.topCenter,
-                      image: imageProvider,
-                      fit: BoxFit.fitWidth)),
+            height: double.infinity,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                  alignment: Alignment.topCenter,
+                  image: imageProvider,
+                  fit: BoxFit.fitWidth),
             ),
+            child: images.length > 0
+                ? Container(
+                    alignment: Alignment.bottomLeft,
+                    margin: EdgeInsets.only(bottom: 5),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          color: Colors.white,
+                        ),
+                        images.length > 1
+                            ? Icon(Icons.circle_outlined, color: Colors.white)
+                            : Icon(Icons.circle_outlined,
+                                color: Colors.transparent),
+                        images.length > 2
+                            ? Icon(Icons.circle_outlined, color: Colors.white)
+                            : Icon(Icons.circle_outlined,
+                                color: Colors.transparent)
+                      ],
+                    ),
+                  )
+                : Container()),
         placeholder: (context, url) => Container(
               decoration: BoxDecoration(
                   image: DecorationImage(

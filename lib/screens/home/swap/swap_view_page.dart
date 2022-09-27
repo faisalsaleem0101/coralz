@@ -6,6 +6,7 @@ import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/chat/chat_page.dart';
 import 'package:coralz/screens/home/swap/swap_edit_page.dart';
+import 'package:coralz/screens/home/user/user_profile_page.dart';
 import 'package:coralz/screens/post/mark_as_sold.dart';
 import 'package:coralz/screens/post/post_comments_page.dart';
 import 'package:coralz/screens/post/post_edit_page.dart';
@@ -14,6 +15,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Post {
@@ -31,19 +33,19 @@ class Post {
   String? paymentLink;
 
   Post(
-      this.id,
-      this.user_id,
-      this.title,
-      this.description,
-      this.offered,
-      this.wanted,
-      this.image,
-      this.post_user_id,
-      this.user_name,
-      this.user_avatar,
-      this.user_rating,
-      this.paymentLink,
-      );
+    this.id,
+    this.user_id,
+    this.title,
+    this.description,
+    this.offered,
+    this.wanted,
+    this.image,
+    this.post_user_id,
+    this.user_name,
+    this.user_avatar,
+    this.user_rating,
+    this.paymentLink,
+  );
 }
 
 class Offer {
@@ -75,8 +77,6 @@ class _PostViewPageState extends State<SwapPostViewPage> {
 
   final TextEditingController amount = TextEditingController();
   String? amountError;
-
-  
 
   Future<void> delete(BuildContext context) async {
     if (mounted) {
@@ -155,7 +155,6 @@ class _PostViewPageState extends State<SwapPostViewPage> {
     }
   }
 
-
   Future<void> _loadData(BuildContext context) async {
     print("Start");
     if (mounted) {
@@ -191,8 +190,8 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                       ? double.parse(response['data']['user_rating'].toString())
                       : double.parse('0'),
                   response['data']['user']['payment_link']);
-              
-              if(response['data']['image'] != null) {
+
+              if (response['data']['image'] != null) {
                 images.add(response['data']['image'].toString());
               }
             });
@@ -319,7 +318,7 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                   color: primaryColorRGB(1),
                 ),
               )
-            : Column(
+            : data != null ? Column(
                 children: [
                   Expanded(
                       flex: 3,
@@ -376,9 +375,11 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                           Icons.share,
                                           color: Colors.white,
                                         ),
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Share.share(
+                                              "${api_endpoint}share?swap=${widget.id}");
+                                        },
                                       ),
-                                      
                                     ],
                                   ),
                                 ))
@@ -422,7 +423,7 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold),
                                           ))),
-                                          Card(
+                                  Card(
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(10)),
@@ -438,7 +439,7 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold),
                                           ))),
-                                          Card(
+                                  Card(
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(10)),
@@ -454,7 +455,6 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold),
                                           ))),
-                                  
                                   Container(
                                     child: Column(
                                       crossAxisAlignment:
@@ -501,7 +501,6 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                   SizedBox(
                                     height: 15,
                                   ),
-                                  
                                   Card(
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
@@ -510,6 +509,9 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                       child: Column(
                                         children: [
                                           ListTile(
+                                            onTap: () {
+                                              Navigator.push(context, MaterialPageRoute(builder: (builder) => UserProfilePage(data!.post_user_id)));
+                                            },
                                             title: Text(data!.user_name),
                                             subtitle: RatingBarIndicator(
                                               itemCount: 5,
@@ -561,7 +563,6 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                                   ),
                                                 ),
                                               )),
-                                          
                                           SizedBox(
                                             height: 15,
                                           ),
@@ -586,7 +587,6 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                                   crossAxisSpacing: 10,
                                                   mainAxisSpacing: 10),
                                           children: [
-                                            
                                             GestureDetector(
                                               onTap: () {
                                                 Navigator.push(
@@ -688,7 +688,15 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                     ),
                   ),
                 ],
-              ));
+              ) : Center(
+                              child: Container(
+                              width: 100,
+                              decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                      image: AssetImage(
+                                          "assets/images/nodata-found.png"),
+                                      fit: BoxFit.contain)),
+                            )));
   }
 
   displayImagesDialog() {

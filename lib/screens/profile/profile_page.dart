@@ -37,7 +37,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final double _headerHeight = 450;
+  final double _headerHeight = 350;
 
   int indexOfPage = 0;
 

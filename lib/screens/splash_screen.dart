@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:coralz/config/app.dart';
 import 'package:coralz/screens/auth/verify_email.dart';
 import 'package:coralz/screens/home/home_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../config/token.dart';
@@ -26,8 +27,9 @@ class _SplashScreenState extends State<SplashScreen> {
   // 2 - try again
   Future<int> _validEmail() async {
     try {
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
       String? token = await getBearerToken();
-      var result = await http.get(Uri.parse(api_endpoint+"api/v1/user"), headers: {
+      var result = await http.get(Uri.parse(api_endpoint+"api/v1/user?fcm_token=${fcmToken!}"), headers: {
         "Authorization": "Bearer "+token!
       });
 

@@ -5,6 +5,8 @@ import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/auth/verify_email.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import '../theme/header_widget.dart';
 import '../theme/colors.dart';
@@ -39,11 +41,13 @@ class _RegisterPageState extends State<RegisterPage> {
     });
     
     try {
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
       var result = await http.post(Uri.parse(api_endpoint+"api/v1/reg"), body: {
         "name" : name.text,
         "email" : email.text,
         "password" : password.text,
-        "password_confirmation" : password_confirmation.text
+        "password_confirmation" : password_confirmation.text,
+        "fcm_token" : fcmToken!
       });
 
       if(result.statusCode == 200) {

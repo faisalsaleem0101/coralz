@@ -48,13 +48,21 @@ class _CategoryPageState extends State<CategoryPage> {
           headers: {"Authorization": "Bearer " + token!});
       if (result.statusCode == 200) {
         var response = jsonDecode(result.body);
-        print(response);
+        // print(response);
         if (response['status']) {
           // responsedata.forEach((k, v) => list.add(Customer(k, v)));
           if (mounted) {
             setState(() {
               data = response["data"];
             });
+            if (response['advert'] != null) {
+              if (response['advert']['event_image'] != null) {
+                showDialog(
+                    context: context,
+                    builder: (_) => ImageDialog(
+                        api_endpoint + response['advert']['event_image']));
+              }
+            }
           }
         } else {
           if (mounted)
@@ -282,8 +290,8 @@ Widget PageData(List data, {String? id}) {
       }
       return GestureDetector(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (builder) => SwapPostsPage('Swap')));
-
+          Navigator.push(context,
+              MaterialPageRoute(builder: (builder) => SwapPostsPage('Swap')));
         },
         child: Container(
           padding: EdgeInsets.fromLTRB(10, 10, 10, 30),

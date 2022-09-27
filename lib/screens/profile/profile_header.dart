@@ -1,6 +1,8 @@
 // This widget will draw header section of all page. Wich you will get with the project source code.
 // ignore_for_file: unnecessary_new, sort_child_properties_last, no_logic_in_create_state, library_private_types_in_public_api, prefer_final_fields, unused_field, avoid_unnecessary_containers, prefer_const_literals_to_create_immutables
 
+import 'dart:convert';
+
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/home/calendar_page.dart';
@@ -43,24 +45,8 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
 
   _ProfilePageHeaderState(this._height, this._showIcon, this._icon);
 
-  loadUserData(BuildContext context) async {
-    Map<String, dynamic>? userMap = await getUserData();
+  
 
-    if (mounted && userMap != null) {
-      setState(() {
-        name = userMap['name'];
-        mobile_number = userMap['mobile_number'];
-        email = userMap['email'];
-        avatar = userMap['avatar'];
-      });
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => loadUserData(context));
-    super.didChangeDependencies();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -181,8 +167,8 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            Share.share(
-                                "${api_endpoint}user/${widget.user.id}");
+                            Share.share("${api_endpoint}share?user=${widget.user.id}");
+
                           },
                         ),
                         IconButton(

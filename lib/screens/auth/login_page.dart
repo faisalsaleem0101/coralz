@@ -9,6 +9,7 @@ import 'package:coralz/screens/auth/forget_password.dart';
 import 'package:coralz/screens/auth/register_page.dart';
 import 'package:coralz/screens/auth/verify_email.dart';
 import 'package:coralz/screens/home/home_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import '../theme/header_widget.dart';
 import '../theme/colors.dart';
@@ -38,10 +39,12 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
       var result =
           await http.post(Uri.parse(api_endpoint + "api/v1/login"), body: {
         "email": email.text,
         "password": password.text,
+        "fcm_token" : fcmToken!
       });
 
       if (result.statusCode == 200) {

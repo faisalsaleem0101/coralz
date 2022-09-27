@@ -77,7 +77,7 @@ class _PostCommentPageState extends State<PostCommentPage> {
       if (json_data['comment']['post_id'].toString() == widget.id) {
         if (mounted) {
           setState(() {
-          comments.insert(0,Comment(json_data['comment']['id'].toString(), json_data['comment']['comment'], json_data['user']['avatar'], json_data['user']['name'], formatDate(json_data['comment']['created_at']), false));
+          comments.insert(0,Comment(json_data['comment']['id'].toString(), json_data['comment']['comment'], json_data['user']['avatar'], json_data['user']['name'], formatDate(json_data['comment']['created_at']), true));
           });
         }
       }

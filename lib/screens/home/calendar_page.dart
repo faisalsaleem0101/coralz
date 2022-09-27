@@ -41,7 +41,7 @@ class _CalendarPageState extends State<CalendarPage> {
       var result = await http.get(Uri.parse(api_endpoint + "api/v1/events"));
       if (result.statusCode == 200) {
         var response = jsonDecode(result.body);
-
+        print(response);
         if (response['status']) {
           if (mounted) {
             if (response['data'] != null) {

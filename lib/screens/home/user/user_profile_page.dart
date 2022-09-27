@@ -17,14 +17,15 @@ import 'User.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
-  const UserProfilePage(this.userId, {Key? key}) : super(key: key);
+  final String? notification_id;
+  const UserProfilePage(this.userId, {this.notification_id,Key? key}) : super(key: key);
 
   @override
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
 class _UserProfilePageState extends State<UserProfilePage> {
-  final double _headerHeight = 500;
+  final double _headerHeight = 460;
   bool isUserLoading = true;
   late User user;
 
@@ -40,7 +41,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     try {
       String? token = await getBearerToken();
       var result = await http.get(
-          Uri.parse("${api_endpoint}api/v1/user/${widget.userId}"),
+          Uri.parse("${api_endpoint}api/v1/user/${widget.userId}?notification_id=${widget.notification_id}"),
           headers: {"Authorization": "Bearer ${token!}"});
       if (result.statusCode == 200) {
         var response = jsonDecode(result.body);

@@ -123,6 +123,7 @@ class _PostFormState extends State<PostForm> {
   List files = [1, 2, 3];
   final ImagePicker _picker = ImagePicker();
   final DateTime initialDate = DateTime.now();
+  final TimeOfDay timeOfDay = TimeOfDay.now();
   final String id;
   final String type;
   bool isLoading = false;
@@ -132,6 +133,7 @@ class _PostFormState extends State<PostForm> {
   List<Category> data = [];
   int category_id = 0;
   DateTime selectedDate = DateTime.now();
+  TimeOfDay selectTimeOfDay = TimeOfDay.now();
   String countryValue = '';
   String stateValue = '';
   String cityValue = '';
@@ -206,6 +208,19 @@ class _PostFormState extends State<PostForm> {
       });
     }
   }
+  Future<void> pickTime(BuildContext context) async {
+    TimeOfDay? s = await showTimePicker(
+        context: context,
+        initialTime: selectTimeOfDay,
+        initialEntryMode: TimePickerEntryMode.dial);
+    if (s != null && s != selectTimeOfDay && mounted) {
+      setState(() {
+        selectTimeOfDay = s;
+      });
+    }
+    
+  }
+  
 
   displayDialog(File file, BuildContext context, int index) {
     showGeneralDialog(
@@ -400,8 +415,8 @@ class _PostFormState extends State<PostForm> {
       request.fields['duration'] = duration.toString();
       request.fields['category_id'] = category_id.toString();
       request.fields['parent_category_id'] =  id;
-      request.fields['start_date'] =
-          "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
+      final toUTC = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, selectTimeOfDay.hour, selectTimeOfDay.minute).toUtc();
+      request.fields['start_date'] = "${toUTC}";
       request.fields['country'] = countryValue;
       request.fields['delivery_price'] =
           delivery_price.text.isNotEmpty ? delivery_price.text : '0';
@@ -1008,6 +1023,35 @@ class _PostFormState extends State<PostForm> {
                 ),
                 Text(
                   "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          Container(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "Future Start Time",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                    onPressed: () {
+                      pickTime(context);
+                    },
+                    icon: Icon(
+                      Icons.timelapse,
+                      size: 30,
+                    )),
+                SizedBox(
+                  width: 10,
+                ),
+                Text(
+                  "${selectTimeOfDay.format(context)}",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],

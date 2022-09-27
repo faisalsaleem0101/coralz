@@ -7,7 +7,7 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:849533245373:android:e5f53a5dbcb58a46fba4d4",
+        "mobilesdk_app_id": "1:849533245373:android:2872fc4c1c1b0426fba4d4",
         "android_client_info": {
           "package_name": "com.example.coralz"
         }
@@ -29,6 +29,13 @@
             {
               "client_id": "849533245373-08r6uai23mtk266q5rucrictidcghsca.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "849533245373-0ir8djebf4dbmi9a1dirf9831qsjhunn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.coralz"
+              }
             }
           ]
         }

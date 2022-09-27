@@ -6,19 +6,14 @@ import 'dart:io';
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/app_bar.dart';
-import 'package:coralz/screens/home/shimmer_loading.dart';
 import 'package:coralz/screens/theme/colors.dart';
-import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:country_picker/country_picker.dart';
 
-import 'package:image/image.dart' as Img;
-import 'package:http_parser/http_parser.dart';
 
 class PostEditPage extends StatefulWidget {
   final String id;
@@ -123,6 +118,7 @@ class Post {
   String start_date;
   String end_date;
   String type;
+  String duration;
   Post(
       this.id,
       this.user_id,
@@ -135,7 +131,8 @@ class Post {
       this.collection,
       this.start_date,
       this.end_date,
-      this.type);
+      this.type,
+      this.duration);
 }
 
 class _PostFormState extends State<PostForm> {
@@ -149,6 +146,7 @@ class _PostFormState extends State<PostForm> {
   List<Category> data = [];
   int category_id = 0;
   DateTime selectedDate = DateTime.now();
+  TimeOfDay selectTimeOfDay = TimeOfDay.now();
   String countryValue = 'Click to select';
   String stateValue = '';
   String cityValue = '';
@@ -216,6 +214,18 @@ class _PostFormState extends State<PostForm> {
     if (selected != null && selected != selectedDate && mounted) {
       setState(() {
         selectedDate = selected;
+      });
+    }
+  }
+
+  Future<void> pickTime(BuildContext context) async {
+    TimeOfDay? s = await showTimePicker(
+        context: context,
+        initialTime: selectTimeOfDay,
+        initialEntryMode: TimePickerEntryMode.dial);
+    if (s != null && s != selectTimeOfDay && mounted) {
+      setState(() {
+        selectTimeOfDay = s;
       });
     }
   }
@@ -525,13 +535,20 @@ class _PostFormState extends State<PostForm> {
                   response['data']['delivery_price'].toString();
               delivery = response['data']['delivery'] == 1 ? 1 : 0;
               collection = response['data']['collection'] == 1 ? 1 : 0;
-              initialDate = DateTime.parse(response['data']['start_date']);
-              selectedDate = DateTime.parse(response['data']['start_date']);
-              int d = daysBetween(
-                  selectedDate, DateTime.parse(response['data']['end_date']));
-              if ([1, 3, 5, 7, 10, 14].contains(d)) {
-                duration = d;
-              }
+
+              DateTime dateTime = DateTime.parse(response['data']['start_date']);
+              dateTime = dateTime.add(dateTime.timeZoneOffset);
+
+              initialDate = dateTime.toLocal();
+              selectedDate = dateTime.toLocal();
+              print(dateTime.toLocal());
+              selectTimeOfDay = TimeOfDay.fromDateTime(selectedDate);
+              duration = response['data']['duration'];
+              // int d = daysBetween(
+              //     selectedDate, DateTime.parse(response['data']['end_date']));
+              // if ([1, 3, 5, 7, 10, 14].contains(d)) {
+              //   duration = d;
+              // }
             });
           }
         }
@@ -973,6 +990,37 @@ class _PostFormState extends State<PostForm> {
                   height: 15,
                 ),
                 Container(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Future Start Time",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                          onPressed: () {
+                            pickTime(context);
+                          },
+                          icon: Icon(
+                            Icons.timelapse,
+                            size: 30,
+                          )),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        "${selectTimeOfDay.format(context)}",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 15,
+                ),
+                Container(
                   width: double.infinity,
                   child: Card(
                     shape: RoundedRectangleBorder(
@@ -1079,7 +1127,7 @@ class _PostFormState extends State<PostForm> {
                           onPressed: () {
                             _storePost(context);
                           },
-                          child: Text('Post'),
+                          child: Text('Save'),
                           style: ElevatedButton.styleFrom(
                             primary: primaryColorRGB(1),
                             elevation: 6,

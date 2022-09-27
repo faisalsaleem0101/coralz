@@ -4,6 +4,7 @@ import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/auth/login_page.dart';
 import 'package:coralz/screens/setting/account_management.dart';
 import 'package:coralz/screens/setting/help.dart';
+import 'package:coralz/screens/setting/notification_page.dart';
 import 'package:coralz/screens/setting/privacy_and_policy_page.dart';
 import 'package:coralz/screens/setting/term_and_condition_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
@@ -80,6 +81,19 @@ class _SettingPageState extends State<SettingPage> {
                         Navigator.push(context, MaterialPageRoute(builder: (builder) => AccountManagementPage()));
                       },
                       title: Text('Account Management'),
+                      trailing: Icon(Icons.navigate_next)),
+                ),
+                Card(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  elevation: 6,
+                  child: ListTile(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (builder) => NotificationPage()));
+                      },
+                      title: Text('Notifications'),
                       trailing: Icon(Icons.navigate_next)),
                 ),
                 Card(

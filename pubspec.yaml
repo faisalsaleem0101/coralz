@@ -53,10 +53,29 @@ dependencies:
   share_plus: ^4.1.0
   image: ^3.2.0
   table_calendar: ^3.0.7
+  google_maps_flutter: ^2.2.0
+  geolocator: ^9.0.1
+  geocoding: ^2.0.5
+  flutter_countdown_timer: ^4.1.0
+  slide_countdown: ^0.3.4
+  firebase_core: ^1.22.0
+  firebase_messaging: ^13.0.2
+  flutter_local_notifications: ^11.0.0
+  overlay_support: ^2.0.1
+  uni_links: ^0.5.1
+  rxdart: ^0.27.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  flutter_launcher_icons: "^0.10.0"
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/big_icon.png"
+  remove_alpha_ios: true
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -96,6 +115,7 @@ flutter:
     - assets/images/icons/auction.png
     - assets/images/icons/fish.png
     - assets/images/icons/shop.png
+
     
   fonts:
     - family: BottomBarIcons

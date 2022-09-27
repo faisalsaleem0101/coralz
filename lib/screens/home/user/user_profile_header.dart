@@ -241,7 +241,7 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            Share.share("$api_endpoint/user/${widget.user.id}");
+                            Share.share("${api_endpoint}share?user=${widget.user.id}");
                           },
                         )
                       ],
@@ -400,6 +400,9 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                   ],
                 ),
               ),
+              SizedBox(
+                      width: 20,
+                    ),
               Container(
                 margin: EdgeInsets.only(top: 5.0),
                 child: Column(
@@ -421,46 +424,46 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                     SizedBox(
                       width: 20,
                     ),
-                    ElevatedButton(
-                      onPressed: () {
+                    // ElevatedButton(
+                    //   onPressed: () {
 
-                        showGeneralDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          transitionBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: ScaleTransition(
-                                scale: animation,
-                                child: child,
-                              ),
-                            );
-                          },
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) {
-                            return StarRating(widget.user);
-                          },
-                        ).then((value) {
-                          if(mounted) {
-                            setState(() {
-                              User updateUser = value as User;
-                              widget.user.rating = updateUser.rating;
-                              widget.user.isRated = updateUser.isRated;
-                              widget.user.comment = updateUser.comment;
-                            });
-                          }
-                          print(value);
-                        });
-                      },
-                      child: Text(widget.user.isRated ? 'Edit Rating' : 'Rate this user'),
-                      style: ElevatedButton.styleFrom(
-                          primary: secondaryColorRGB(1),
-                          side: BorderSide(
-                            width: 2.0,
-                            color: Colors.white,
-                          )),
-                    ),
+                    //     showGeneralDialog(
+                    //       context: context,
+                    //       barrierDismissible: false,
+                    //       transitionBuilder:
+                    //           (context, animation, secondaryAnimation, child) {
+                    //         return FadeTransition(
+                    //           opacity: animation,
+                    //           child: ScaleTransition(
+                    //             scale: animation,
+                    //             child: child,
+                    //           ),
+                    //         );
+                    //       },
+                    //       pageBuilder:
+                    //           (context, animation, secondaryAnimation) {
+                    //         return StarRating(widget.user);
+                    //       },
+                    //     ).then((value) {
+                    //       if(mounted) {
+                    //         setState(() {
+                    //           User updateUser = value as User;
+                    //           widget.user.rating = updateUser.rating;
+                    //           widget.user.isRated = updateUser.isRated;
+                    //           widget.user.comment = updateUser.comment;
+                    //         });
+                    //       }
+                    //       print(value);
+                    //     });
+                    //   },
+                    //   child: Text(widget.user.isRated ? 'Edit Rating' : 'Rate this user'),
+                    //   style: ElevatedButton.styleFrom(
+                    //       primary: secondaryColorRGB(1),
+                    //       side: BorderSide(
+                    //         width: 2.0,
+                    //         color: Colors.white,
+                    //       )),
+                    // ),
                   ],
                 ),
               ),

@@ -8,11 +8,11 @@ class ImageDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: EdgeInsets.all(5),
       backgroundColor: Colors.transparent,
       child: CachedNetworkImage(
           imageUrl: url,
           imageBuilder: (context, imageProvider) => Container(
-                height: 400,
                 decoration: BoxDecoration(
                     color: Colors.transparent,
                     image: DecorationImage(
@@ -34,7 +34,7 @@ class ImageDialog extends StatelessWidget {
                     )),
               ),
           placeholder: (context, url) => Container(
-                height: 400,
+                
                 decoration: BoxDecoration(
                     color: Colors.transparent,
                     image: DecorationImage(
@@ -56,7 +56,7 @@ class ImageDialog extends StatelessWidget {
                     )),
               ),
           errorWidget: (context, url, error) => Container(
-                height: 400,
+                
                 decoration: BoxDecoration(
                     color: Colors.transparent,
                     image: DecorationImage(

@@ -121,7 +121,11 @@ class SearchPeople extends StatefulWidget {
 class _SearchPeopleState extends State<SearchPeople> {
   final _controller = ScrollController();
 
-  Future<void> onRefresh() async {}
+  Future<void> onRefresh() async {
+    url = "${api_endpoint}api/v1/users?name=${widget.query}";
+    data = [];
+    _loadData(context);
+  }
 
   List data = [];
   bool isLoading = false;
@@ -215,7 +219,7 @@ class _SearchPeopleState extends State<SearchPeople> {
       if (_controller.position.atEdge) {
         bool isTop = _controller.position.pixels == 0;
         if (!isTop) {
-          // TODO : Add infinite scroll
+          _loadData(context);
         }
       }
     });
