@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/chat/chat_page.dart';
@@ -177,10 +178,7 @@ class _ChatsPageState extends State<ChatsPage> {
                                               chatHeads[index].id,
                                               chatHeads[index].name)));
                                 },
-                                leading: CircleAvatar(
-                                  backgroundImage: AssetImage(
-                                      'assets/images/default-profile-picture.jpg'),
-                                ),
+                                leading: imageHead(chatHeads[index].avatar != null ? api_endpoint + chatHeads[index].avatar! : null),
                                 title: Text(chatHeads[index].name),
                                 subtitle: Text(chatHeads[index].lastMessage),
                                 trailing: Text(chatHeads[index].date),
@@ -194,4 +192,25 @@ class _ChatsPageState extends State<ChatsPage> {
       ),
     );
   }
+}
+
+Widget imageHead(String? url) {
+  if (url == null) {
+    return CircleAvatar(
+      backgroundImage: AssetImage('assets/images/default-profile-picture.jpg'),
+    );
+  }
+
+  return CachedNetworkImage(
+      imageUrl: url,
+      imageBuilder: (context, imageProvider) => CircleAvatar(
+            backgroundImage: imageProvider,
+          ),
+      placeholder: (context, url) => CircleAvatar(
+            backgroundImage: AssetImage('assets/images/image_loader.gif'),
+          ),
+      errorWidget: (context, url, error) => CircleAvatar(
+            backgroundImage:
+                AssetImage('assets/images/default-profile-picture.jpg'),
+          ));
 }

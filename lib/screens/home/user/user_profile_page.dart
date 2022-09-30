@@ -52,7 +52,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             setState(() {
               user = User(
                   response['user']['id'].toString(),
-                  response['user']['auth_user_id'].toString(),
+                  response['auth_user_id'].toString(),
                   response['user']['name'].toString(),
                   response['user']['email'].toString(),
                   response['user']['mobile_number'],
@@ -66,6 +66,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   response['user']['is_rated'],
                   response['user']['is_followed']);
             });
+            print(user.authUserId);
+            print(user.id);
             _loadData(context);
           }
         } else {

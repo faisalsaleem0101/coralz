@@ -44,6 +44,7 @@ class Post {
   int isSold = 0;
   bool expire;
   bool isWanted = false;
+  bool isStart;
   Post(
       this.id,
       this.user_id,
@@ -68,7 +69,8 @@ class Post {
       this.paymentLink,
       this.isSold,
       this.expire,
-      this.isWanted);
+      this.isWanted,
+      this.isStart);
 }
 
 class Offer {
@@ -403,6 +405,7 @@ class _PostViewPageState extends State<PostViewPage> {
                 response['data']['is_sold'],
                 response['data']['expire'],
                 response['data']['is_wanted'],
+                response['data']['is_start'],
               );
 
               if (response['data']['offers'] != null) {
@@ -466,7 +469,7 @@ class _PostViewPageState extends State<PostViewPage> {
             backgroundColor: Colors.transparent,
             content: AwesomeSnackbarContent(
               title: 'Success!',
-              message: 'Password Updated!',
+              message: 'Offer successfully submited!',
               contentType: ContentType.success,
             ),
           ));
@@ -676,12 +679,12 @@ class _PostViewPageState extends State<PostViewPage> {
                                               subtitle: data!.type == '1'
                                                   ? (data!.expire
                                                       ? const Text('Expired')
-                                                      : SlideCountdownSeparated(
+                                                      : (data!.isStart ? SlideCountdownSeparated(
                                                           duration:
                                                               getDurationOfEndDate(
                                                                   data!
                                                                       .end_date),
-                                                        ))
+                                                        ) : Text('Start Time ${getFormattedEndDate(data!.start_date)}')))
                                                   : Text(data!.expire
                                                       ? 'Expired'
                                                       : 'End Time ${getFormattedEndDate(data!.end_date)}'),
@@ -750,7 +753,7 @@ class _PostViewPageState extends State<PostViewPage> {
                                       SizedBox(
                                         height: 20,
                                       ),
-                                      data!.type == '1'
+                                      data!.type == '1' && data!.isStart
                                           ? Column(
                                               children: [
                                                 data!.expire
@@ -845,8 +848,20 @@ class _PostViewPageState extends State<PostViewPage> {
                                                                       ElevatedButton(
                                                                     onPressed:
                                                                         () {
-                                                                      _submitOffer(
-                                                                          context);
+                                                                          if(user_id == data!.user_id) {
+                                                                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                                                              elevation: 0,
+                                                                              behavior: SnackBarBehavior.floating,
+                                                                              backgroundColor: Colors.transparent,
+                                                                              content: AwesomeSnackbarContent(
+                                                                                title: 'Info!',
+                                                                                message: "You can't submit offer on this is post!",
+                                                                                contentType: ContentType.help,
+                                                                              ),
+                                                                            ));
+                                                                          } else {
+                                                                            _submitOffer(context);
+                                                                          }
                                                                     },
                                                                     child: Text(
                                                                         'Submit'),
@@ -1067,7 +1082,7 @@ class _PostViewPageState extends State<PostViewPage> {
                                       SizedBox(
                                         height: 15,
                                       ),
-                                      Card(
+                                      user_id != data!.user_id ? Card(
                                           shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(10)),
@@ -1176,7 +1191,7 @@ class _PostViewPageState extends State<PostViewPage> {
                                                 height: 15,
                                               ),
                                             ],
-                                          )),
+                                          )) : Container(),
                                       SizedBox(
                                         height: 15,
                                       ),

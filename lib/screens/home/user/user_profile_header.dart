@@ -48,7 +48,6 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
         isLoading = true;
       });
     }
-// rating
     try {
       String? token = await getBearerToken();
       var result = await http.post(Uri.parse("${api_endpoint}api/v1/user/follow-unfollow/${widget.user.id}"),
@@ -351,7 +350,7 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                       ],
                     )),
               ),
-              Container(
+              widget.user.id != widget.user.authUserId ? Container(
                 margin: EdgeInsets.only(top: 5.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -399,11 +398,11 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                     ),
                   ],
                 ),
-              ),
+              ) : Container(),
               SizedBox(
                       width: 20,
                     ),
-              Container(
+              widget.user.id != widget.user.authUserId ? Container(
                 margin: EdgeInsets.only(top: 5.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -466,7 +465,7 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                     // ),
                   ],
                 ),
-              ),
+              ) : Container(),
               // Container(
               //   margin: EdgeInsets.only(top: 5),
               //   child: RatingBar.builder(

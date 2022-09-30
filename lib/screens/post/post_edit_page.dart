@@ -367,8 +367,10 @@ class _PostFormState extends State<PostForm> {
       request.fields['description'] = description.text;
       request.fields['price'] = price.text;
       request.fields['duration'] = duration.toString();
-      request.fields['start_date'] =
-          "${selectedDate.year}-${selectedDate.month}-${selectedDate.day}";
+
+      final toUTC = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, selectTimeOfDay.hour, selectTimeOfDay.minute).toUtc();
+      request.fields['start_date'] = "${toUTC}";
+
       request.fields['country'] = countryValue;
       request.fields['delivery_price'] =
           delivery_price.text.isNotEmpty ? delivery_price.text : '0';
