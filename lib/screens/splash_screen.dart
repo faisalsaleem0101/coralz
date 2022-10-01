@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:coralz/config/app.dart';
+import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/auth/verify_email.dart';
 import 'package:coralz/screens/home/home_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -38,6 +39,14 @@ class _SplashScreenState extends State<SplashScreen> {
         print(response);
         if(response['status']) {
 
+          await updateUser(
+            id: response['user']['id'].toString(),
+            name: response['user']['name'],
+            email: response['user']['email'],
+            mobileNumber: response['user']['mobile_number'] ?? '',
+            avatar: response['user']['avatar'] ?? '',
+            paymentLink: response['user']['payment_link'] ?? '',
+          );
           
 
           if(response['user']['email_verified_at'] == null) {

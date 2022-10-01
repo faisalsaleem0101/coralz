@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/config/user_data.dart';
@@ -7,7 +6,6 @@ import 'package:coralz/screens/theme/colors.dart';
 import 'package:coralz/screens/theme/simple_header_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:http/http.dart' as http;
 
@@ -68,17 +66,13 @@ class _EditPageFormState extends State<EditPageForm> {
   }
 
   loadUserData(BuildContext context) async {
-    Map<String, dynamic>? userMap = await getUserData();
-
-    if (mounted && userMap != null) {
-      name.text = userMap['name'];
-      mobile_number.text = userMap['mobile_number'];
-      email.text = userMap['email'];
-      payment_link.text = userMap['payment_link'];
+    String? p = await getPaymentLink();
+    if (mounted) {
       setState(() {
-        user_avatar = userMap['avatar'];
+        payment_link.text = p ?? '';
       });
     }
+    
   }
 
 
@@ -103,15 +97,16 @@ class _EditPageFormState extends State<EditPageForm> {
         var response = jsonDecode(result.body);
        
         if(response['status']) {
-          Map<String, dynamic> userMap = {
-            'id': response['user']['id'],
-            'name': response['user']['name'],
-            'email': response['user']['email'],
-            'avatar': response['user']['avatar'],
-            'mobile_number': response['user']['mobile_number'],
-            'payment_link' : response['user']['payment_link'],
-          };
-          await setUserData(userMap);
+
+          await updateUser(
+            id: response['user']['id'].toString(),
+            name: response['user']['name'],
+            email: response['user']['email'],
+            mobileNumber: response['user']['mobile_number'] ?? '',
+            avatar: response['user']['avatar'] ?? '',
+            paymentLink: response['user']['payment_link'] ?? '',
+          );
+
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 elevation: 0,

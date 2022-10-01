@@ -53,15 +53,16 @@ class _RegisterPageState extends State<RegisterPage> {
       if(result.statusCode == 200) {
         var response = jsonDecode(result.body);
         if(response['status']) {
-          Map<String,dynamic> userMap = {
-            'id' : response['user']['id'],
-            'name' : response['user']['name'],
-            'email' : response['user']['email'],
-            'avatar' : response['user']['avatar'],
-            'mobile_number' : response['user']['mobile_number'],
-            'payment_link' : response['user']['payment_link'],
-          };
-          await setUserData(userMap);
+
+          await updateUser(
+            id: response['user']['id'].toString(),
+            name: response['user']['name'],
+            email: response['user']['email'],
+            mobileNumber: response['user']['mobile_number'] ?? '',
+            avatar: response['user']['avatar'] ?? '',
+            paymentLink: response['user']['payment_link'] ?? '',
+          );
+
           await setBearerToken(response['bearer_token']);
           Navigator.push(context, MaterialPageRoute(builder: (builder) => VerifyEmailPage()));
         } else {

@@ -35,11 +35,11 @@ class _AppBarWidgetState extends State<AppBarWidget> {
   _AppBarWidgetState(this._height, this._showIcon, this._icon);
 
   loadUserData(BuildContext context) async {
-    Map<String, dynamic>? userMap = await getUserData();
 
-    if (mounted && userMap != null) {
+    String? t = await getAvatar();
+    if (mounted && t != null) {
       setState(() {
-        avatar = userMap['avatar'];
+        avatar = t.isEmpty ? null : t;
       });
     }
   }
