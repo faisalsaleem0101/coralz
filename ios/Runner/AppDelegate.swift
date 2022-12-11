@@ -8,7 +8,7 @@ import GoogleMaps
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GMSServices.provideAPIKey("AIzaSyC6bomnVOjQGeTC2PB4Y63LcW_QOl2K-nM")
+    GMSServices.provideAPIKey("AIzaSyA5URFbJlN9qFZMgzVhWOlnlgMzlJ7nsS8")
     GeneratedPluginRegistrant.register(with: self)
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate

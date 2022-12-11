@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
+import 'package:coralz/screens/home/shop/Place.dart';
 import 'package:coralz/screens/home/shop/location_picker_page.dart';
 import 'package:coralz/screens/profile/edit_profile_page.dart';
 import 'package:coralz/screens/setting/profile_password_update.dart';
@@ -33,8 +34,11 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
   final TextEditingController webAddress = TextEditingController();
   final TextEditingController description = TextEditingController();
   String location = '';
+  final TextEditingController customLocation = TextEditingController();
   String latitude = '';
   String longitude = '';
+  bool show_number = true;
+  bool show_web = true;
 
   String? nameError, emailError, phoneError, locationError;
 
@@ -49,7 +53,7 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
   int type = 0;
 
   Future<void> _determinePosition(BuildContext context) async {
-    Position? pos = await showDialog(
+    Place? pos = await showDialog(
         context: context, builder: (_) => LocationPickerPage());
 
     if (pos != null) {
@@ -68,6 +72,8 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
             longitude = pos.longitude.toString();
             location =
                 "${placemark.street}, ${placemark.locality}, ${placemark.administrativeArea} ${placemark.postalCode} ,${placemark.country}";
+
+            customLocation.text = location;
           });
         }
       }
@@ -99,12 +105,14 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
         'name': name.text,
         'email': email.text,
         'phone': phone.text,
-        'address': location,
+        'address': customLocation.text.isNotEmpty ? customLocation.text : location,
         'latitude': latitude,
         'longitude': longitude,
         'web_address': webAddress.text,
         'description': description.text,
-        'type': (type+1).toString()
+        'type': (type + 1).toString(),
+        'show_number': show_number ? '1' : '0',
+        'show_web': show_web ? '1' : '0'
       }, headers: {
         "Authorization": "Bearer " + token!
       });
@@ -113,31 +121,31 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
         var response = jsonDecode(result.body);
         if (response['status']) {
           if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                elevation: 0,
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: Colors.transparent,
-                content: AwesomeSnackbarContent(
-                  title: 'Success!',
-                  message: "You will receive email of your request confirmation or rejection!",
-                  contentType: ContentType.success,
-                ),
-              ));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              elevation: 0,
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Colors.transparent,
+              content: AwesomeSnackbarContent(
+                title: 'Success!',
+                message:
+                    "You will receive email of your request confirmation or rejection!",
+                contentType: ContentType.success,
+              ),
+            ));
 
-              setState(() {
-                name.text = '';
-                email.text = '';
-                phone.text = '';
-                location = '';
-                latitude = '';
-                longitude = '';
-                webAddress.text = '';
-                description.text = '';
-                type = 0;
-                
-
-              });
-            }
+            setState(() {
+              name.text = '';
+              email.text = '';
+              phone.text = '';
+              location = '';
+              customLocation.text = '';
+              latitude = '';
+              longitude = '';
+              webAddress.text = '';
+              description.text = '';
+              type = 0;
+            });
+          }
         } else {
           if (response['errors']['type'] == 1) {
             var errors = response['errors']['errors'];
@@ -471,6 +479,41 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
                       ],
                     ),
                   ),
+                  customLocation.text.isNotEmpty ? Container(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Customize your Address",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          height: 6,
+                        ),
+                        Card(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          elevation: 6,
+                          shadowColor: Colors.grey.shade500,
+                          child: TextFormField(
+                            controller: customLocation,
+                            decoration: InputDecoration(
+                              hintText: 'Custom Address',
+                              hintStyle: TextStyle(fontWeight: FontWeight.bold),
+                              border: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,
+                              contentPadding: EdgeInsets.only(
+                                  left: 15, bottom: 11, top: 11, right: 15),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ) : Container(),
                   locationError != null
                       ? Align(
                           alignment: Alignment.centerLeft,
@@ -574,6 +617,47 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
                               ),
                             ))
                       ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  Divider(color: Colors.black),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 6,
+                    shadowColor: Colors.grey.shade500,
+                    child: ListTile(
+                      title: Text('Show my number on map'),
+                      trailing: Switch(
+                        value: show_number,
+                        onChanged: (value) {
+                          setState(() {
+                            show_number = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 6,
+                    shadowColor: Colors.grey.shade500,
+                    child: ListTile(
+                      title: Text('Show my web address on map'),
+                      trailing: Switch(
+                        value: show_web,
+                        onChanged: (value) {
+                          setState(() {
+                            show_web = value;
+                          });
+                        },
+                      ),
                     ),
                   ),
                   !isLoading

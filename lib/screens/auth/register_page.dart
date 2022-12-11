@@ -7,6 +7,7 @@ import 'package:coralz/config/user_data.dart';
 import 'package:coralz/screens/auth/verify_email.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../theme/header_widget.dart';
 import '../theme/colors.dart';
@@ -41,7 +42,10 @@ class _RegisterPageState extends State<RegisterPage> {
     });
     
     try {
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      String? fcmToken = '';
+      if (!kIsWeb) {
+        fcmToken = await FirebaseMessaging.instance.getToken();
+      }
       var result = await http.post(Uri.parse(api_endpoint+"api/v1/reg"), body: {
         "name" : name.text,
         "email" : email.text,
@@ -62,6 +66,8 @@ class _RegisterPageState extends State<RegisterPage> {
             avatar: response['user']['avatar'] ?? '',
             paymentLink: response['user']['payment_link'] ?? '',
           );
+
+          await setContactPrivacy(response['user']['contact_privacy'] == 1 ? true: false);
 
           await setBearerToken(response['bearer_token']);
           Navigator.push(context, MaterialPageRoute(builder: (builder) => VerifyEmailPage()));

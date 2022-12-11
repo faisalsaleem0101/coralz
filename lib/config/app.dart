@@ -1,2 +1,4 @@
-String api_endpoint = "http://10.0.2.2:8000/";
-String chat_endpoint = "https://testofcoralz.herokuapp.com/";
+
+final String api_endpoint = "http://coralz.cerberus666.com/";
+final String share_endpoint = "http://coralz.cerberus666.com/";
+final String chat_endpoint = "https://testofcoralz.herokuapp.com/";

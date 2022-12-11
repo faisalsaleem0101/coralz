@@ -240,7 +240,7 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            Share.share("${api_endpoint}share?user=${widget.user.id}");
+                            Share.share("${share_endpoint}share?user=${widget.user.id}");
                           },
                         )
                       ],
@@ -363,7 +363,20 @@ class _UserProfileHeaderState extends State<UserProfileHeader> {
                         radius: 20,
                         child: IconButton(
                             onPressed: () {
-                              _launchCaller(widget.user.mobileNumber ?? '0');
+                              if(widget.user.contactPrivacy) {
+                                _launchCaller(widget.user.mobileNumber ?? '0');
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  elevation: 0,
+                                  behavior: SnackBarBehavior.floating,
+                                  backgroundColor: Colors.transparent,
+                                  content: AwesomeSnackbarContent(
+                                    title: 'Info!',
+                                    message: 'You are unable to contact ${widget.user.name}!',
+                                    contentType: ContentType.warning,
+                                  ),
+                                ));
+                              }
                             },
                             icon: Icon(
                               Icons.phone,

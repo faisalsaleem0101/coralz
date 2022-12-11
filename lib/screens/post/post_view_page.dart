@@ -11,7 +11,6 @@ import 'package:coralz/screens/post/post_comments_page.dart';
 import 'package:coralz/screens/post/post_edit_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -45,6 +44,7 @@ class Post {
   bool expire;
   bool isWanted = false;
   bool isStart;
+  String buy_it_now_price;
   Post(
       this.id,
       this.user_id,
@@ -70,7 +70,8 @@ class Post {
       this.isSold,
       this.expire,
       this.isWanted,
-      this.isStart);
+      this.isStart,
+      this.buy_it_now_price);
 }
 
 class Offer {
@@ -379,34 +380,34 @@ class _PostViewPageState extends State<PostViewPage> {
 
             setState(() {
               data = Post(
-                response['data']['id'].toString(),
-                response['data']['user_id'].toString(),
-                response['data']['title'].toString(),
-                response['data']['description'].toString(),
-                response['data']['price'].toString(),
-                response['data']['delivery_price'].toString(),
-                response['data']['country'].toString(),
-                response['data']['delivery'].toString(),
-                response['data']['collection'].toString(),
-                response['data']['start_date'].toString(),
-                response['data']['end_date'].toString(),
-                response['data']['type'].toString(),
-                response['data']['post_views'],
-                response['data']['post_likes'],
-                response['data']['post_comments'],
-                response['data']['is_like'],
-                response['data']['user']['id'].toString(),
-                response['data']['user']['name'].toString(),
-                response['data']['user']['avatar'],
-                response['data']['user_rating'] != null
-                    ? double.parse(response['data']['user_rating'].toString())
-                    : double.parse('0'),
-                response['data']['user']['payment_link'],
-                response['data']['is_sold'],
-                response['data']['expire'],
-                response['data']['is_wanted'],
-                response['data']['is_start'],
-              );
+                  response['data']['id'].toString(),
+                  response['data']['user_id'].toString(),
+                  response['data']['title'].toString(),
+                  response['data']['description'].toString(),
+                  response['data']['price'].toString(),
+                  response['data']['delivery_price'].toString(),
+                  response['data']['country'].toString(),
+                  response['data']['delivery'].toString(),
+                  response['data']['collection'].toString(),
+                  response['data']['start_date'].toString(),
+                  response['data']['end_date'].toString(),
+                  response['data']['type'].toString(),
+                  response['data']['post_views'],
+                  response['data']['post_likes'],
+                  response['data']['post_comments'],
+                  response['data']['is_like'],
+                  response['data']['user']['id'].toString(),
+                  response['data']['user']['name'].toString(),
+                  response['data']['user']['avatar'],
+                  response['data']['user_rating'] != null
+                      ? double.parse(response['data']['user_rating'].toString())
+                      : double.parse('0'),
+                  response['data']['user']['payment_link'],
+                  response['data']['is_sold'],
+                  response['data']['expire'],
+                  response['data']['is_wanted'],
+                  response['data']['is_start'],
+                  response['data']['buy_it_now_price'].toString());
 
               if (response['data']['offers'] != null) {
                 response['data']['offers'].forEach((el) {
@@ -461,6 +462,11 @@ class _PostViewPageState extends State<PostViewPage> {
                       double.parse(el['amount'].toString())));
                 });
               }
+              if(response['is_sold']) {
+                bought_by = response['bought_by'];
+                data!.expire = true;
+              }
+
             });
           }
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -529,7 +535,6 @@ class _PostViewPageState extends State<PostViewPage> {
     dateTime = dateTime.add(dateTime.timeZoneOffset);
 
     return DateFormat().format(dateTime);
-    
   }
 
   Duration getDurationOfEndDate(String endDate) {
@@ -618,7 +623,7 @@ class _PostViewPageState extends State<PostViewPage> {
                                             ),
                                             onPressed: () {
                                               Share.share(
-                                                  "${api_endpoint}share?post=${widget.id}");
+                                                  "${share_endpoint}share?post=${widget.id}");
                                             },
                                           ),
                                           IconButton(
@@ -679,12 +684,15 @@ class _PostViewPageState extends State<PostViewPage> {
                                               subtitle: data!.type == '1'
                                                   ? (data!.expire
                                                       ? const Text('Expired')
-                                                      : (data!.isStart ? SlideCountdownSeparated(
-                                                          duration:
-                                                              getDurationOfEndDate(
-                                                                  data!
-                                                                      .end_date),
-                                                        ) : Text('Start Time ${getFormattedEndDate(data!.start_date)}')))
+                                                      : (data!.isStart
+                                                          ? SlideCountdownSeparated(
+                                                              duration:
+                                                                  getDurationOfEndDate(
+                                                                      data!
+                                                                          .end_date),
+                                                            )
+                                                          : Text(
+                                                              'Start Time ${getFormattedEndDate(data!.start_date)}')))
                                                   : Text(data!.expire
                                                       ? 'Expired'
                                                       : 'End Time ${getFormattedEndDate(data!.end_date)}'),
@@ -694,6 +702,60 @@ class _PostViewPageState extends State<PostViewPage> {
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ))),
+                                      data!.type == '1'
+                                          ? Column(
+                                              children: [
+                                                Card(
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10)),
+                                                    elevation: 6,
+                                                    child: ListTile(
+                                                        title: Text(
+                                                          'Start Price',
+                                                          style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ),
+                                                        trailing: Text(
+                                                          "£" +
+                                                              "${data!.price}",
+                                                          style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
+                                                        ))),
+                                                // Card(
+                                                //     shape:
+                                                //         RoundedRectangleBorder(
+                                                //             borderRadius:
+                                                //                 BorderRadius
+                                                //                     .circular(
+                                                //                         10)),
+                                                //     elevation: 6,
+                                                //     child: ListTile(
+                                                //         title: Text(
+                                                //           'Buy It Now Price',
+                                                //           style: TextStyle(
+                                                //               fontWeight:
+                                                //                   FontWeight
+                                                //                       .bold),
+                                                //         ),
+                                                //         trailing: Text(
+                                                //           "£" +
+                                                //               "${data!.buy_it_now_price}",
+                                                //           style: TextStyle(
+                                                //               fontWeight:
+                                                //                   FontWeight
+                                                //                       .bold),
+                                                //         ))),
+                                              ],
+                                            )
+                                          : Container(),
                                       Card(
                                           shape: RoundedRectangleBorder(
                                               borderRadius:
@@ -848,20 +910,31 @@ class _PostViewPageState extends State<PostViewPage> {
                                                                       ElevatedButton(
                                                                     onPressed:
                                                                         () {
-                                                                          if(user_id == data!.user_id) {
-                                                                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                                                              elevation: 0,
-                                                                              behavior: SnackBarBehavior.floating,
-                                                                              backgroundColor: Colors.transparent,
-                                                                              content: AwesomeSnackbarContent(
-                                                                                title: 'Info!',
-                                                                                message: "You can't submit offer on this is post!",
-                                                                                contentType: ContentType.help,
-                                                                              ),
-                                                                            ));
-                                                                          } else {
-                                                                            _submitOffer(context);
-                                                                          }
+                                                                      if (user_id ==
+                                                                          data!
+                                                                              .user_id) {
+                                                                        ScaffoldMessenger.of(context)
+                                                                            .showSnackBar(SnackBar(
+                                                                          elevation:
+                                                                              0,
+                                                                          behavior:
+                                                                              SnackBarBehavior.floating,
+                                                                          backgroundColor:
+                                                                              Colors.transparent,
+                                                                          content:
+                                                                              AwesomeSnackbarContent(
+                                                                            title:
+                                                                                'Info!',
+                                                                            message:
+                                                                                "You can't submit offer on this is post!",
+                                                                            contentType:
+                                                                                ContentType.help,
+                                                                          ),
+                                                                        ));
+                                                                      } else {
+                                                                        _submitOffer(
+                                                                            context);
+                                                                      }
                                                                     },
                                                                     child: Text(
                                                                         'Submit'),
@@ -889,8 +962,6 @@ class _PostViewPageState extends State<PostViewPage> {
                                                     return ListTile(
                                                       title: Text(
                                                           offers[index].name),
-                                                      subtitle: Text(
-                                                          offers[index].email),
                                                       trailing: Text(
                                                           "£${offers[index].amount}"),
                                                     );
@@ -1082,116 +1153,199 @@ class _PostViewPageState extends State<PostViewPage> {
                                       SizedBox(
                                         height: 15,
                                       ),
-                                      user_id != data!.user_id ? Card(
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10)),
-                                          elevation: 6,
-                                          child: Column(
-                                            children: [
-                                              ListTile(
-                                                onTap: () {
-                                                  Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (builder) =>
-                                                              UserProfilePage(data!
-                                                                  .post_user_id)));
-                                                },
-                                                title: Text(data!.user_name),
-                                                subtitle: RatingBarIndicator(
-                                                  itemCount: 5,
-                                                  itemSize: 20,
-                                                  rating: data!.user_rating,
-                                                  itemBuilder:
-                                                      (context, index) {
-                                                    return Icon(
-                                                      Icons.star,
-                                                      color: Colors.amber,
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                              Container(
-                                                  width: double.infinity,
-                                                  padding: EdgeInsets.fromLTRB(
-                                                      70, 0, 70, 0),
-                                                  child: OutlinedButton.icon(
-                                                    icon: Icon(
-                                                      Icons.chat,
-                                                      color: Colors.black,
-                                                    ),
-                                                    label: Text(
-                                                      "Chat",
-                                                      style: TextStyle(
-                                                          color: Colors.black),
-                                                    ),
-                                                    onPressed: () {
+                                      user_id != data!.user_id
+                                          ? Card(
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10)),
+                                              elevation: 6,
+                                              child: Column(
+                                                children: [
+                                                  ListTile(
+                                                    onTap: () {
                                                       Navigator.push(
                                                           context,
                                                           MaterialPageRoute(
-                                                              builder:
-                                                                  (builder) =>
-                                                                      ChatPage(
-                                                                        data!
-                                                                            .user_id,
-                                                                        data!
-                                                                            .post_user_id,
-                                                                        data!
-                                                                            .user_name,
-                                                                      )));
+                                                              builder: (builder) =>
+                                                                  UserProfilePage(
+                                                                      data!
+                                                                          .post_user_id)));
                                                     },
-                                                    style: ElevatedButton
-                                                        .styleFrom(
+                                                    title:
+                                                        Text(data!.user_name),
+                                                    subtitle:
+                                                        RatingBarIndicator(
+                                                      itemCount: 5,
+                                                      itemSize: 20,
+                                                      rating: data!.user_rating,
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        return Icon(
+                                                          Icons.star,
+                                                          color: Colors.amber,
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                      width: double.infinity,
                                                       padding:
-                                                          EdgeInsets.all(15),
-                                                      side: BorderSide(
-                                                          width: 2.0,
-                                                          color: Colors.black),
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(32.0),
-                                                      ),
-                                                    ),
-                                                  )),
-                                              SizedBox(
-                                                height: 5,
-                                              ),
-                                              Container(
-                                                  width: double.infinity,
-                                                  padding: EdgeInsets.fromLTRB(
-                                                      20, 0, 20, 0),
-                                                  child: ElevatedButton.icon(
-                                                    icon: Icon(Icons.payment),
-                                                    label: Text(
-                                                      "Payment Link",
-                                                    ),
-                                                    onPressed: () async {
-                                                      var uri = Uri.parse(
-                                                          data!.paymentLink!);
-                                                      if (await canLaunchUrl(
-                                                          uri)) {
-                                                        await launchUrl(uri);
-                                                      } else {}
-                                                    },
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                      primary: Colors.black,
-                                                      onPrimary: Colors.white,
+                                                          EdgeInsets.fromLTRB(
+                                                              70, 0, 70, 0),
+                                                      child:
+                                                          OutlinedButton.icon(
+                                                        icon: Icon(
+                                                          Icons.chat,
+                                                          color: Colors.black,
+                                                        ),
+                                                        label: Text(
+                                                          "Chat",
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.black),
+                                                        ),
+                                                        onPressed: () {
+                                                          Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                  builder:
+                                                                      (builder) =>
+                                                                          ChatPage(
+                                                                            data!.user_id,
+                                                                            data!.post_user_id,
+                                                                            data!.user_name,
+                                                                          )));
+                                                        },
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  15),
+                                                          side: BorderSide(
+                                                              width: 2.0,
+                                                              color:
+                                                                  Colors.black),
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        32.0),
+                                                          ),
+                                                        ),
+                                                      )),
+                                                  SizedBox(
+                                                    height: 5,
+                                                  ),
+                                                  Container(
+                                                      width: double.infinity,
                                                       padding:
-                                                          EdgeInsets.all(10),
-                                                      side: BorderSide(
-                                                          width: 2.0,
-                                                          color: Colors.black),
-                                                    ),
-                                                  )),
-                                              SizedBox(
-                                                height: 15,
-                                              ),
-                                            ],
-                                          )) : Container(),
+                                                          EdgeInsets.fromLTRB(
+                                                              20, 0, 20, 0),
+                                                      child:
+                                                          ElevatedButton.icon(
+                                                        icon:
+                                                            Icon(Icons.payment),
+                                                        label: Text(
+                                                          "Payment Link",
+                                                        ),
+                                                        onPressed: () async {
+                                                          if(data!.paymentLink == null || data!.paymentLink!.isEmpty) {
+                                                            if (mounted) {
+                                                              ScaffoldMessenger
+                                                                      .of(
+                                                                          context)
+                                                                  .showSnackBar(
+                                                                      SnackBar(
+                                                                elevation: 0,
+                                                                behavior:
+                                                                    SnackBarBehavior
+                                                                        .floating,
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .transparent,
+                                                                content:
+                                                                    AwesomeSnackbarContent(
+                                                                  title:
+                                                                      'Info!',
+                                                                  message:
+                                                                      'Please contact the seller direct!',
+                                                                  contentType:
+                                                                      ContentType
+                                                                          .warning,
+                                                                ),
+                                                              ));
+                                                            }
+
+                                                            return;
+
+                                                          }
+                                                          String url = data!
+                                                              .paymentLink!;
+                                                          var uri;
+                                                          if (url.contains(
+                                                              "https")) {
+                                                            uri =
+                                                                Uri.parse(url);
+                                                          } else {
+                                                            uri = Uri(
+                                                                scheme: 'https',
+                                                                path: url);
+                                                          }
+
+                                                          if (await canLaunchUrl(
+                                                              uri)) {
+                                                            await launchUrl(
+                                                                uri);
+                                                          } else {
+                                                            if (mounted) {
+                                                              ScaffoldMessenger
+                                                                      .of(
+                                                                          context)
+                                                                  .showSnackBar(
+                                                                      SnackBar(
+                                                                elevation: 0,
+                                                                behavior:
+                                                                    SnackBarBehavior
+                                                                        .floating,
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .transparent,
+                                                                content:
+                                                                    AwesomeSnackbarContent(
+                                                                  title:
+                                                                      'Info!',
+                                                                  message:
+                                                                      'Payment link is not valid!',
+                                                                  contentType:
+                                                                      ContentType
+                                                                          .warning,
+                                                                ),
+                                                              ));
+                                                            }
+                                                          }
+                                                        },
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          primary: Colors.black,
+                                                          onPrimary:
+                                                              Colors.white,
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  10),
+                                                          side: BorderSide(
+                                                              width: 2.0,
+                                                              color:
+                                                                  Colors.black),
+                                                        ),
+                                                      )),
+                                                  SizedBox(
+                                                    height: 15,
+                                                  ),
+                                                ],
+                                              ))
+                                          : Container(),
                                       SizedBox(
                                         height: 15,
                                       ),

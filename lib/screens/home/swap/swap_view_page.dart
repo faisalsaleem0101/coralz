@@ -18,7 +18,7 @@ import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class Post {
+class Swap {
   String id;
   String user_id;
   String title;
@@ -32,7 +32,7 @@ class Post {
   double user_rating = 0;
   String? paymentLink;
 
-  Post(
+  Swap(
     this.id,
     this.user_id,
     this.title,
@@ -65,7 +65,7 @@ class SwapPostViewPage extends StatefulWidget {
 
 class _PostViewPageState extends State<SwapPostViewPage> {
   bool isLoading = true;
-  Post? data;
+  Swap? data;
   List<Offer> offers = [];
   List<String> images = [];
   late String user_id;
@@ -175,7 +175,7 @@ class _PostViewPageState extends State<SwapPostViewPage> {
             user_id = response['user_id'].toString();
 
             setState(() {
-              data = Post(
+              data = Swap(
                   response['data']['id'].toString(),
                   response['data']['user_id'].toString(),
                   response['data']['title'].toString(),
@@ -377,7 +377,7 @@ class _PostViewPageState extends State<SwapPostViewPage> {
                                         ),
                                         onPressed: () {
                                           Share.share(
-                                              "${api_endpoint}share?swap=${widget.id}");
+                                              "${share_endpoint}share?swap=${widget.id}");
                                         },
                                       ),
                                     ],

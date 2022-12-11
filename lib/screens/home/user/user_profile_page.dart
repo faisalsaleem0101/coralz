@@ -64,9 +64,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       ? ''
                       : response['user']['comments'],
                   response['user']['is_rated'],
-                  response['user']['is_followed']);
+                  response['user']['is_followed'],
+                  response['user']['contact_privacy'] == 1 ? true : false);
             });
-            print(user.authUserId);
+            print(response['user']['contact_privacy'] == 1 ? true : false);
             print(user.id);
             _loadData(context);
           }

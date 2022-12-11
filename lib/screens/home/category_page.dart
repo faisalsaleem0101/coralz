@@ -32,6 +32,8 @@ class _CategoryPageState extends State<CategoryPage> {
   final String title;
   final String id;
 
+  String? swapUrl;
+
   _CategoryPageState(this.id, this.title);
 
   Future<void> _loadData(BuildContext context) async {
@@ -48,11 +50,12 @@ class _CategoryPageState extends State<CategoryPage> {
           headers: {"Authorization": "Bearer " + token!});
       if (result.statusCode == 200) {
         var response = jsonDecode(result.body);
-        // print(response);
+        print(response);
         if (response['status']) {
           // responsedata.forEach((k, v) => list.add(Customer(k, v)));
           if (mounted) {
             setState(() {
+              swapUrl = response["swap"];
               data = response["data"];
             });
             if (response['advert'] != null) {
@@ -197,14 +200,14 @@ class _CategoryPageState extends State<CategoryPage> {
                                       "assets/images/nodata-found.png"),
                                   fit: BoxFit.contain)),
                         ))
-                      : PageData(data, id: id))
+                      : PageData(data, id: id, swapUrl: swapUrl))
         ],
       ),
     );
   }
 }
 
-Widget PageData(List data, {String? id}) {
+Widget PageData(List data, {String? id, String? swapUrl}) {
   return GridView.builder(
     padding: EdgeInsets.all(15),
     itemCount: id != null && id == '2' ? data.length + 1 : data.length,
@@ -227,7 +230,7 @@ Widget PageData(List data, {String? id}) {
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (builder) => SubCategoryPage(id, name, type)));
+                    builder: (builder) => SubCategoryPage(id, name, type, placeholder: data[index]["all_option_placeholder"],)));
           },
           child: CachedNetworkImage(
               imageUrl: api_endpoint + data[index]["image"],
@@ -293,7 +296,7 @@ Widget PageData(List data, {String? id}) {
           Navigator.push(context,
               MaterialPageRoute(builder: (builder) => SwapPostsPage('Swap')));
         },
-        child: Container(
+        child: swapUrl == null ? Container(
           padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
           alignment: Alignment.bottomCenter,
           decoration: BoxDecoration(
@@ -307,8 +310,66 @@ Widget PageData(List data, {String? id}) {
             style: TextStyle(
                 fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
           ),
-        ),
+        ) : CachedNetworkImage(
+              imageUrl: api_endpoint + swapUrl,
+              imageBuilder: (context, imageProvider) => Container(
+                    padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                    alignment: Alignment.bottomCenter,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                        )),
+                    child: Text(
+                      "Swap",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              placeholder: (context, url) => Container(
+                    padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                    alignment: Alignment.bottomCenter,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: AssetImage("assets/images/image_loader.gif"),
+                          fit: BoxFit.cover,
+                        )),
+                    child: Text(
+                      "Swap",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              errorWidget: (context, url, error) => Container(
+                    padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                    alignment: Alignment.bottomCenter,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image:
+                              AssetImage("assets/images/image_not_found.png"),
+                          fit: BoxFit.cover,
+                        )),
+                    child: Text(
+                      "Swap",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  )),
       );
     },
   );
 }
+
+

@@ -14,7 +14,6 @@ import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:country_picker/country_picker.dart';
 
-
 class PostEditPage extends StatefulWidget {
   final String id;
   const PostEditPage(this.id, {Key? key}) : super(key: key);
@@ -153,6 +152,7 @@ class _PostFormState extends State<PostForm> {
   TextEditingController title = TextEditingController();
   TextEditingController description = TextEditingController();
   TextEditingController price = TextEditingController();
+  TextEditingController buy_it_now_price = TextEditingController();
   TextEditingController delivery_price = TextEditingController();
   int delivery = 0;
   int collection = 0;
@@ -322,6 +322,23 @@ class _PostFormState extends State<PostForm> {
 
   bool submitForm = false;
   Future<void> _storePost(BuildContext context) async {
+
+    if(delivery == 0 && collection == 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          content: AwesomeSnackbarContent(
+            title: 'Info!',
+            message: 'Please select at least 1 for delivery or collection!',
+            contentType: ContentType.warning,
+          ),
+        ));
+      }
+      return;
+    }
+
     if (mounted) {
       setState(() {
         isSubmit = true;
@@ -366,9 +383,12 @@ class _PostFormState extends State<PostForm> {
       request.fields['title'] = title.text;
       request.fields['description'] = description.text;
       request.fields['price'] = price.text;
+      request.fields['buy_it_now_price'] = buy_it_now_price.text;
       request.fields['duration'] = duration.toString();
 
-      final toUTC = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, selectTimeOfDay.hour, selectTimeOfDay.minute).toUtc();
+      final toUTC = DateTime(selectedDate.year, selectedDate.month,
+              selectedDate.day, selectTimeOfDay.hour, selectTimeOfDay.minute)
+          .toUtc();
       request.fields['start_date'] = "${toUTC}";
 
       request.fields['country'] = countryValue;
@@ -502,6 +522,7 @@ class _PostFormState extends State<PostForm> {
   }
 
   late Post post;
+  int type = 0;
   Future<void> _loadData(BuildContext context) async {
     print("Start");
     if (mounted) {
@@ -533,12 +554,15 @@ class _PostFormState extends State<PostForm> {
               title.text = response['data']['title'];
               description.text = response['data']['description'] ?? '';
               price.text = response['data']['price'].toString();
+              buy_it_now_price.text =
+                  response['data']['buy_it_now_price'].toString();
               delivery_price.text =
                   response['data']['delivery_price'].toString();
               delivery = response['data']['delivery'] == 1 ? 1 : 0;
               collection = response['data']['collection'] == 1 ? 1 : 0;
 
-              DateTime dateTime = DateTime.parse(response['data']['start_date']);
+              DateTime dateTime =
+                  DateTime.parse(response['data']['start_date']);
               dateTime = dateTime.add(dateTime.timeZoneOffset);
 
               initialDate = dateTime.toLocal();
@@ -546,6 +570,7 @@ class _PostFormState extends State<PostForm> {
               print(dateTime.toLocal());
               selectTimeOfDay = TimeOfDay.fromDateTime(selectedDate);
               duration = response['data']['duration'];
+              type = response['data']['type'];
               // int d = daysBetween(
               //     selectedDate, DateTime.parse(response['data']['end_date']));
               // if ([1, 3, 5, 7, 10, 14].contains(d)) {
@@ -750,7 +775,7 @@ class _PostFormState extends State<PostForm> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Price",
+                        type == 1 ? "Start Price" : "Price",
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
@@ -795,6 +820,61 @@ class _PostFormState extends State<PostForm> {
                         ),
                       )
                     : Center(),
+                type == 1
+                    ? Column(
+                        children: [
+                          SizedBox(
+                            height: 15,
+                          ),
+                          Container(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Buy It Now Price",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(
+                                  height: 6,
+                                ),
+                                Card(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                  elevation: 6,
+                                  shadowColor: Colors.grey.shade500,
+                                  child: TextFormField(
+                                    controller: buy_it_now_price,
+                                    cursorColor: primaryColorRGB(1),
+                                    decoration: InputDecoration(
+                                      suffixIcon: Icon(
+                                        Icons.currency_pound,
+                                        color: Color.fromRGBO(106, 106, 106, 1),
+                                      ),
+                                      hintText: 'Type..',
+                                      focusColor: primaryColorRGB(1),
+                                      hintStyle: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                      border: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      errorBorder: InputBorder.none,
+                                      disabledBorder: InputBorder.none,
+                                      contentPadding: EdgeInsets.only(
+                                          left: 15,
+                                          bottom: 11,
+                                          top: 11,
+                                          right: 15),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      )
+                    : Container(),
                 SizedBox(
                   height: 15,
                 ),
@@ -825,6 +905,58 @@ class _PostFormState extends State<PostForm> {
                           onTap: () {
                             showCountryPicker(
                               context: context,
+                              countryFilter: [
+                                "RU",
+                                "DE",
+                                "GB",
+                                "FR",
+                                "IT",
+                                "ES",
+                                "PL",
+                                "UA",
+                                "RO",
+                                "NL",
+                                "BE",
+                                "SE",
+                                "CZ",
+                                "GR",
+                                "PT",
+                                "HU",
+                                "BY",
+                                "AT",
+                                "CH",
+                                "RS",
+                                "BG",
+                                "DK",
+                                "SK",
+                                "FI",
+                                "NO",
+                                "IE",
+                                "HR",
+                                "MD",
+                                "BA",
+                                "AL",
+                                "LT",
+                                "SL",
+                                "MK",
+                                "LV",
+                                "EE",
+                                "CY",
+                                "LU",
+                                "ME",
+                                "MT",
+                                "IS",
+                                "JE",
+                                "IM",
+                                "AD",
+                                "GG",
+                                "FO",
+                                "LI",
+                                "MC",
+                                "SM",
+                                "GI",
+                                "VA",
+                              ],
                               showPhoneCode:
                                   false, // optional. Shows phone code before the country name.
                               onSelect: (Country country) {

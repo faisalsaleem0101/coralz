@@ -167,7 +167,7 @@ class _ProfilePageHeaderState extends State<ProfilePageHeader> {
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            Share.share("${api_endpoint}share?user=${widget.user.id}");
+                            Share.share("${share_endpoint}share?user=${widget.user.id}");
 
                           },
                         ),

@@ -135,3 +135,20 @@ Future<bool> updateUser({required String id, required String name, required Stri
     return false;
   }
 }
+
+
+
+Future<bool> setContactPrivacy(bool t) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('contact_privacy', t);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+Future<bool?> getContactPrivacy() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('contact_privacy');
+}

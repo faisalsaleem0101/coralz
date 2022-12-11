@@ -6,20 +6,14 @@ import 'dart:io';
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/screens/home/app_bar.dart';
-import 'package:coralz/screens/home/shimmer_loading.dart';
 import 'package:coralz/screens/post/post_view_page.dart';
 import 'package:coralz/screens/theme/colors.dart';
-import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:http/http.dart' as http;
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:country_picker/country_picker.dart';
 
-import 'package:image/image.dart' as Img;
-import 'package:http_parser/http_parser.dart';
 
 class PostCreatePage extends StatefulWidget {
   final String title;
@@ -140,6 +134,7 @@ class _PostFormState extends State<PostForm> {
   TextEditingController title = TextEditingController();
   TextEditingController description = TextEditingController();
   TextEditingController price = TextEditingController();
+  TextEditingController buy_it_now_price = TextEditingController();
   TextEditingController delivery_price = TextEditingController();
   int delivery = 0;
   int collection = 0;
@@ -208,6 +203,7 @@ class _PostFormState extends State<PostForm> {
       });
     }
   }
+
   Future<void> pickTime(BuildContext context) async {
     TimeOfDay? s = await showTimePicker(
         context: context,
@@ -218,9 +214,7 @@ class _PostFormState extends State<PostForm> {
         selectTimeOfDay = s;
       });
     }
-    
   }
-  
 
   displayDialog(File file, BuildContext context, int index) {
     showGeneralDialog(
@@ -280,7 +274,7 @@ class _PostFormState extends State<PostForm> {
   }
 
   Future<void> _loadData(BuildContext context) async {
-    if(widget.id == '0') {
+    if (widget.id == '0') {
       return;
     }
     if (mounted) {
@@ -375,6 +369,24 @@ class _PostFormState extends State<PostForm> {
   }
 
   Future<void> _storePost(BuildContext context) async {
+
+    if(delivery == 0 && collection == 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          elevation: 0,
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          content: AwesomeSnackbarContent(
+            title: 'Info!',
+            message: 'Please select at least 1 for delivery or collection!',
+            contentType: ContentType.warning,
+          ),
+        ));
+      }
+      return;
+    }
+
+
     if (mounted) {
       setState(() {
         isSubmit = true;
@@ -405,17 +417,22 @@ class _PostFormState extends State<PostForm> {
         //     contentType: MediaType.parse('image/jpeg')));
 
         request.files.add(http.MultipartFile.fromBytes(
-            'images[]', File(element.image.path).readAsBytesSync(),
-            filename: element.image.path,));
+          'images[]',
+          File(element.image.path).readAsBytesSync(),
+          filename: element.image.path,
+        ));
       });
 
       request.fields['title'] = title.text;
       request.fields['description'] = description.text;
       request.fields['price'] = price.text;
+      request.fields['buy_it_now_price'] = buy_it_now_price.text;
       request.fields['duration'] = duration.toString();
       request.fields['category_id'] = category_id.toString();
-      request.fields['parent_category_id'] =  id;
-      final toUTC = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, selectTimeOfDay.hour, selectTimeOfDay.minute).toUtc();
+      request.fields['parent_category_id'] = id;
+      final toUTC = DateTime(selectedDate.year, selectedDate.month,
+              selectedDate.day, selectTimeOfDay.hour, selectTimeOfDay.minute)
+          .toUtc();
       request.fields['start_date'] = "${toUTC}";
       request.fields['country'] = countryValue;
       request.fields['delivery_price'] =
@@ -443,7 +460,8 @@ class _PostFormState extends State<PostForm> {
               ),
             ));
             Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) => PostViewPage(response['post_id'].toString())));
+                builder: (BuildContext context) =>
+                    PostViewPage(response['post_id'].toString())));
           }
         } else {
           if (response['errors']['type'] == 1) {
@@ -759,84 +777,140 @@ class _PostFormState extends State<PostForm> {
                   ),
                 )
               : Center(),
+          type == '3'
+              ? Column(
+                  children: [
+                    SizedBox(
+                      height: 15,
+                    ),
+                    Container(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Buy It Now Price",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            height: 6,
+                          ),
+                          Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 6,
+                            shadowColor: Colors.grey.shade500,
+                            child: TextFormField(
+                              controller: buy_it_now_price,
+                              cursorColor: primaryColorRGB(1),
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(
+                                  Icons.currency_pound,
+                                  color: Color.fromRGBO(106, 106, 106, 1),
+                                ),
+                                hintText: 'Type..',
+                                focusColor: primaryColorRGB(1),
+                                hintStyle:
+                                    TextStyle(fontWeight: FontWeight.bold),
+                                border: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                contentPadding: EdgeInsets.only(
+                                    left: 15, bottom: 11, top: 11, right: 15),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                )
+              : Container(),
           SizedBox(
             height: 15,
           ),
-          widget.id != '0' ? Container(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      "Select Category",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(
-                      width: 5,
-                    ),
-                    isLoading
-                        ? CircleAvatar(
-                            radius: 6,
-                            backgroundColor: Colors.transparent,
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
+          widget.id != '0'
+              ? Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            "Select Category",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          isLoading
+                              ? CircleAvatar(
+                                  radius: 6,
+                                  backgroundColor: Colors.transparent,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.black,
+                                  ),
+                                )
+                              : Container()
+                        ],
+                      ),
+                      SizedBox(
+                        height: 6,
+                      ),
+                      Card(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          elevation: 6,
+                          shadowColor: Colors.grey.shade500,
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              hintText: 'Select',
+                              focusColor: primaryColorRGB(1),
+                              hintStyle: TextStyle(fontWeight: FontWeight.bold),
+                              border: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,
+                              contentPadding:
+                                  EdgeInsets.only(left: 15, right: 15),
                             ),
-                          )
-                        : Container()
-                  ],
-                ),
-                SizedBox(
-                  height: 6,
-                ),
-                Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 6,
-                    shadowColor: Colors.grey.shade500,
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        hintText: 'Select',
-                        focusColor: primaryColorRGB(1),
-                        hintStyle: TextStyle(fontWeight: FontWeight.bold),
-                        border: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        errorBorder: InputBorder.none,
-                        disabledBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.only(left: 15, right: 15),
-                      ),
-                      isEmpty: data
-                          .firstWhere((element) => element.id == category_id)
-                          .name
-                          .isEmpty,
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: data
-                              .firstWhere(
-                                  (element) => element.id == category_id)
-                              .id
-                              .toString(),
-                          isDense: true,
-                          isExpanded: true,
-                          onChanged: (value) {
-                            if (mounted) {
-                              setState(() {
-                                category_id = int.parse(value ?? '0');
-                              });
-                            }
-                          },
-                          items: data
-                              .map((e) => DropdownMenuItem(
-                                  child: Text(e.name), value: e.id.toString()))
-                              .toList(),
-                        ),
-                      ),
-                    ))
-              ],
-            ),
-          ) : Container(),
+                            isEmpty: data
+                                .firstWhere(
+                                    (element) => element.id == category_id)
+                                .name
+                                .isEmpty,
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: data
+                                    .firstWhere(
+                                        (element) => element.id == category_id)
+                                    .id
+                                    .toString(),
+                                isDense: true,
+                                isExpanded: true,
+                                onChanged: (value) {
+                                  if (mounted) {
+                                    setState(() {
+                                      category_id = int.parse(value ?? '0');
+                                    });
+                                  }
+                                },
+                                items: data
+                                    .map((e) => DropdownMenuItem(
+                                        child: Text(e.name),
+                                        value: e.id.toString()))
+                                    .toList(),
+                              ),
+                            ),
+                          ))
+                    ],
+                  ),
+                )
+              : Container(),
           SizedBox(
             height: 15,
           ),
@@ -867,6 +941,58 @@ class _PostFormState extends State<PostForm> {
                     onTap: () {
                       showCountryPicker(
                         context: context,
+                        countryFilter: [
+                          "RU",
+                          "DE",
+                          "GB",
+                          "FR",
+                          "IT",
+                          "ES",
+                          "PL",
+                          "UA",
+                          "RO",
+                          "NL",
+                          "BE",
+                          "SE",
+                          "CZ",
+                          "GR",
+                          "PT",
+                          "HU",
+                          "BY",
+                          "AT",
+                          "CH",
+                          "RS",
+                          "BG",
+                          "DK",
+                          "SK",
+                          "FI",
+                          "NO",
+                          "IE",
+                          "HR",
+                          "MD",
+                          "BA",
+                          "AL",
+                          "LT",
+                          "SL",
+                          "MK",
+                          "LV",
+                          "EE",
+                          "CY",
+                          "LU",
+                          "ME",
+                          "MT",
+                          "IS",
+                          "JE",
+                          "IM",
+                          "AD",
+                          "GG",
+                          "FO",
+                          "LI",
+                          "MC",
+                          "SM",
+                          "GI",
+                          "VA",
+                        ],
                         showPhoneCode:
                             false, // optional. Shows phone code before the country name.
                         onSelect: (Country country) {

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:coralz/config/app.dart';
 import 'package:coralz/config/token.dart';
 import 'package:coralz/config/user_data.dart';
@@ -23,6 +25,48 @@ class _SettingPageState extends State<SettingPage> {
   final double _headerHeight = 220;
 
   bool isLoading = false;
+  bool notificationCountLoading = true;
+  int count = 0;
+
+  Future<void> _loadCount(BuildContext context) async {
+    if(mounted) {
+      setState(() {
+        notificationCountLoading = true;
+      });
+    }
+    try {
+      String? token = await getBearerToken();
+      var result =await http.get(Uri.parse(api_endpoint+"api/v1/notifications-count"), headers: {
+        "Authorization": "Bearer "+token!
+      });
+      if(result.statusCode == 200) {
+        var response = jsonDecode(result.body);
+        print(response);
+        if (response['status']) {
+          if(mounted) {
+            setState(() {
+              count  = response['data'];
+            });
+          }
+        }
+      }
+    } catch (e) {
+
+    }
+
+    if(mounted) {
+      setState(() {
+        notificationCountLoading = false;
+      });
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _loadCount(context));    
+  }
 
   Future<void> _logout(BuildContext context) async {
     if(mounted) {
@@ -94,7 +138,7 @@ class _SettingPageState extends State<SettingPage> {
                         Navigator.push(context, MaterialPageRoute(builder: (builder) => NotificationPage()));
                       },
                       title: Text('Notifications'),
-                      trailing: Icon(Icons.navigate_next)),
+                      trailing: notificationCountLoading ? CircularProgressIndicator(strokeWidth: 2,color: primaryColorRGB(1),) : CircleAvatar(backgroundColor: primaryColorRGB(1),child: Text("${count}", style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),)),
                 ),
                 Card(
                   shape: RoundedRectangleBorder(

@@ -1,5 +1,6 @@
 import 'package:coralz/screens/profile/edit_profile_page.dart';
 import 'package:coralz/screens/setting/payment_link_update_page.dart';
+import 'package:coralz/screens/setting/privacy.dart';
 import 'package:coralz/screens/setting/profile_password_update.dart';
 import 'package:coralz/screens/theme/colors.dart';
 import 'package:coralz/screens/theme/simple_header_widget.dart';
@@ -69,6 +70,19 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                         Navigator.push(context, MaterialPageRoute(builder: (builder) => PaymentLinkUpdatePage()));
                       },
                       title: Text('Payment Info'),
+                      trailing: Icon(Icons.navigate_next)),
+                ),
+                Card(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  elevation: 6,
+                  child: ListTile(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (builder) => PrivacyPage()));
+                      },
+                      title: Text('Privacy'),
                       trailing: Icon(Icons.navigate_next)),
                 ),
 

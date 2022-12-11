@@ -249,6 +249,21 @@ class _ProfilePageState extends State<ProfilePage> {
                               : Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.zero))),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        changePage(5);
+                      },
+                      child: Text('Swap'),
+                      style: ElevatedButton.styleFrom(
+                          onPrimary:
+                              indexOfPage == 5 ? Colors.white : Colors.grey,
+                          primary: indexOfPage == 5
+                              ? primaryColorRGB(1)
+                              : Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.only(
                                 topRight: Radius.circular(10),
                                 bottomRight: Radius.circular(10)),

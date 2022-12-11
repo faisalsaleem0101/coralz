@@ -39,8 +39,8 @@ class _SuppliersMapPageState extends State<SuppliersMapPage> {
   Completer<GoogleMapController> _controller = Completer();
 
   static final CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
+    target: LatLng(51.509865,  -0.118092),
+    zoom: 4.2,
   );
   final List<Marker> _markers = <Marker>[];
 

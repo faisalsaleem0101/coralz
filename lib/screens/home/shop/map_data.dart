@@ -41,6 +41,13 @@ class MapData extends StatelessWidget {
                   height: 8,
                 ),
                 Text(
+                  "Phone No: ${data['show_number'] == 1 ? (data['phone'] ?? '-') : "**********"}",
+                  style: TextStyle(color: Colors.white),
+                ),
+                SizedBox(
+                  height: 8,
+                ),
+                Text(
                   "Address: ${data['address'] ?? '-'}",
                   style: TextStyle(color: Colors.white),
                 ),
@@ -48,7 +55,7 @@ class MapData extends StatelessWidget {
                   height: 8,
                 ),
                 Text(
-                  "Web Address: ${data['web_address'] ?? '-'}",
+                  "Web Address: ${data['show_number'] == 1 ? (data['web_address'] ?? '-') : "*********"}",
                   style: TextStyle(color: Colors.white),
                 ),
                 SizedBox(

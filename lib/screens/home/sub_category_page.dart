@@ -20,7 +20,8 @@ class SubCategoryPage extends StatefulWidget {
   final String title;
   final String id;
   final String type;
-  const SubCategoryPage(this.id, this.title, this.type, {Key? key})
+  final String? placeholder;
+  const SubCategoryPage(this.id, this.title, this.type, {this.placeholder,Key? key})
       : super(key: key);
 
   @override
@@ -176,7 +177,7 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
           Expanded(
               child: isLoading
                   ? ShimmerLoading()
-                  : PageData(data, id: id, title: title))
+                  : PageData(data, id: id, title: title, placeholder: widget.placeholder))
         ],
       ),
       floatingActionButton: type != '5'
@@ -195,7 +196,7 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
   }
 }
 
-Widget PageData(List data, {String? id, String? title}) {
+Widget PageData(List data, {String? id, String? title, String? placeholder}) {
   return GridView.builder(
     padding: EdgeInsets.all(15),
     itemCount: data.length + 1,
@@ -285,6 +286,83 @@ Widget PageData(List data, {String? id, String? title}) {
               MaterialPageRoute(
                   builder: (builder) =>
                       PostsViewPage(id ?? '1', title ?? 'All', 0)));
+        },
+        child: placeholder == null ? Container(
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+          alignment: Alignment.bottomCenter,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              image: DecorationImage(
+                image: AssetImage("assets/images/post-default.png"),
+                fit: BoxFit.cover,
+              )),
+          child: Text(
+            "All",
+            style: TextStyle(
+                fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ) : CachedNetworkImage(
+              imageUrl: api_endpoint + placeholder,
+              imageBuilder: (context, imageProvider) => Container(
+                    padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                    alignment: Alignment.bottomCenter,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                        )),
+                    child: Text(
+                      "All",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              placeholder: (context, url) => Container(
+                    padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                    alignment: Alignment.bottomCenter,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: AssetImage("assets/images/image_loader.gif"),
+                          fit: BoxFit.cover,
+                        )),
+                    child: Text(
+                      "All",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              errorWidget: (context, url, error) => Container(
+                    padding: EdgeInsets.fromLTRB(10, 10, 10, 30),
+                    alignment: Alignment.bottomCenter,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image:
+                              AssetImage("assets/images/image_not_found.png"),
+                          fit: BoxFit.cover,
+                        )),
+                    child: Text(
+                      "All",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  )),
+      );
+
+      return GestureDetector(
+        onTap: () {
+          
         },
         child: Container(
           padding: EdgeInsets.fromLTRB(10, 10, 10, 30),

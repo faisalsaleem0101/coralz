@@ -10,6 +10,7 @@ import 'package:coralz/screens/auth/register_page.dart';
 import 'package:coralz/screens/auth/verify_email.dart';
 import 'package:coralz/screens/home/home_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../theme/header_widget.dart';
 import '../theme/colors.dart';
@@ -39,7 +40,10 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      String? fcmToken = '';
+      if (!kIsWeb) {
+        fcmToken = await FirebaseMessaging.instance.getToken();
+      }
       var result =
           await http.post(Uri.parse(api_endpoint + "api/v1/login"), body: {
         "email": email.text,
@@ -60,6 +64,7 @@ class _LoginPageState extends State<LoginPage> {
             avatar: response['user']['avatar'] ?? '',
             paymentLink: response['user']['payment_link'] ?? '',
           );
+          await setContactPrivacy(response['user']['contact_privacy'] == 1 ? true: false);
 
           await setBearerToken(response['bearer_token']);
           if (response['user']['email_verified_at'] == null) {
@@ -281,7 +286,7 @@ class _LoginPageState extends State<LoginPage> {
                                   builder: (builder) => ForgetPasswordPage()));
                         },
                         child: Text(
-                          'Forget Password?',
+                          'Forgot Password?',
                           style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

@@ -139,7 +139,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                     children: [
 
                       Text(
-                        'Forget Password',
+                        'Forgot Password',
                         style: TextStyle(
                           fontSize: 26,
                           color: Colors.black,
